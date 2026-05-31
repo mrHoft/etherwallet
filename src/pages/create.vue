@@ -65,12 +65,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { router } from '~/utils/router'
 import Passphrase from '~/components/PassPhrase.vue'
 import CopyIcon from '~/components/CopyIcon.vue'
 import { createWallet, type WalletResult } from '~/api/create'
 import { storage } from '~/utils/storage'
+import { useNavigation } from '~/composables/useNavigation'
 
+const { navigateTo } = useNavigation()
 const walletName = ref<string>('')
 const passphrase = ref<string>('')
 const isLoading = ref<boolean>(false)
@@ -120,13 +121,13 @@ const handleSubmit = async () => {
 }
 
 const goHome = () => {
-  router.navigate('/')
+  navigateTo('/')
 }
 </script>
 
 <style scoped>
 .create-wallet-page {
-  min-height: 100vh;
+  height: 100%;
   background: var(--color00);
   padding: 1.5rem;
   box-sizing: border-box;
@@ -225,7 +226,6 @@ const goHome = () => {
 
 .action-button:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .loading-spinner {

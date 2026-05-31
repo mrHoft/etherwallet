@@ -14,16 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import { router } from '~/utils/router';
+import { useNavigation } from '~/composables/useNavigation'
+const { navigateTo } = useNavigation()
 
 const goHome = () => {
-  router.navigate('/')
+  navigateTo('/')
 }
 </script>
 
 <style scoped>
 .not-found-page {
-  min-height: 100vh;
+  height: 100%;
   background: var(--color00);
   padding: 1.5rem;
   box-sizing: border-box;
