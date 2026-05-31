@@ -3,7 +3,7 @@
     <div class="container">
       <h1 class="title">Create a new wallet</h1>
 
-      <form @submit.prevent="handleSubmit" class="wallet-form">
+      <form v-if="!showSuccess" @submit.prevent="handleSubmit" class="wallet-form">
         <div class="form-group">
           <label for="wallet-name" class="form-label">Wallet Name</label>
           <input
@@ -18,25 +18,37 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Passphrase (Optional)</label>
+          <label class="form-label">Passphrase (Required)</label>
           <Passphrase v-model="passphrase" :max-length="6" @complete="onPassphraseComplete" />
-          <p class="form-hint">Enter a 6-character passphrase for additional security</p>
+          <p class="form-hint">Enter a 6-character passphrase for security (minimum 3 characters)</p>
         </div>
 
-        <button type="submit" class="submit-button" :disabled="isLoading || !isFormValid">
+        <button type="submit" class="action-button" :disabled="isLoading || !isFormValid">
           <span v-if="isLoading" class="loading-spinner"></span>
           <span v-else>Create Wallet</span>
         </button>
       </form>
 
-      <div v-if="showSuccess" class="success-message">
-        <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        </svg>
-        <div>
-          <h3 class="success-title">Wallet Created Successfully!</h3>
-          <p class="success-text">Your wallet has been created. Please save your credentials securely.</p>
+      <div v-if="showSuccess && walletResult" class="success-message">
+        <div class="success-header">
+          <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          <div>
+            <h3 class="success-title">{{ createdWalletName }} wallet Created Successfully!</h3>
+            <p class="success-text"><strong>IMPORTANT:</strong> Please save your mnemonic phrase securely. You will need it to recover your wallet.</p>
+          </div>
         </div>
+
+        <div class="mnemonic-box">
+          <div class="mnemonic-header">
+            <span class="mnemonic-label">Recovery Phrase</span>
+            <CopyIcon :mnemonic="walletResult.mnemonicPhrase" @copy-success="onCopySuccess" />
+          </div>
+          <p class="mnemonic-phrase">{{ walletResult.mnemonicPhrase }}</p>
+        </div>
+
+        <p class="warning-text">⚠️ Never share your mnemonic phrase with anyone. Store it in a safe place.</p>
       </div>
 
       <div v-if="errorMessage" class="error-message">
@@ -46,23 +58,18 @@
         <span>{{ errorMessage }}</span>
       </div>
 
-      <button v-if="showSuccess" @click="goHome" class="home-button">← Home</button>
+      <button v-if="showSuccess" @click="goHome" class="action-button">← Home</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { router } from '~/utils/router';
+import { router } from '~/utils/router'
 import Passphrase from '~/components/PassPhrase.vue'
-import { createWallet } from '~/api/create'
-
-interface WalletResult {
-  address: string
-  privateKey: string
-  mnemonicPhrase: string
-  derivationPath: string | null
-}
+import CopyIcon from '~/components/CopyIcon.vue'
+import { createWallet, type WalletResult } from '~/api/create'
+import { storage } from '~/utils/storage'
 
 const walletName = ref<string>('')
 const passphrase = ref<string>('')
@@ -70,18 +77,21 @@ const isLoading = ref<boolean>(false)
 const showSuccess = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const walletResult = ref<WalletResult | null>(null)
+const createdWalletName = ref<string>('')
 
 const isFormValid = computed<boolean>(() => {
-  return walletName.value.trim().length > 0
+  return walletName.value.trim().length > 0 && passphrase.value.length >= 3
 })
 
 const onPassphraseComplete = (value: string) => {
   passphrase.value = value
 }
 
+const onCopySuccess = () => {}
+
 const handleSubmit = async () => {
   if (!isFormValid.value) {
-    errorMessage.value = 'Please enter a wallet name'
+    errorMessage.value = 'Please enter a wallet name and valid passphrase (minimum 3 characters)'
     return
   }
 
@@ -90,18 +100,12 @@ const handleSubmit = async () => {
   showSuccess.value = false
 
   try {
-    const result = createWallet(passphrase.value || undefined)
+    const result = await createWallet(passphrase.value)
     walletResult.value = result
+    createdWalletName.value = walletName.value.trim()
 
-    const savedWallets = JSON.parse(localStorage.getItem('wallets') || '[]')
-    savedWallets.push({
-      id: Date.now(),
-      name: walletName.value.trim(),
-      address: result.address,
-      mnemonic: result.mnemonicPhrase,
-      createdAt: new Date().toISOString()
-    })
-    localStorage.setItem('wallets', JSON.stringify(savedWallets))
+    const recordKey = walletName.value.trim().replace(/ /g, '_')
+    storage.set(recordKey, result.encryptedJson)
 
     showSuccess.value = true
 
@@ -193,14 +197,13 @@ const goHome = () => {
   margin-top: 0.25rem;
 }
 
-.submit-button {
+.action-button {
   background: var(--color-accent60);
   color: white;
   border: none;
   padding: 0.875rem 1.5rem;
   border-radius: 0.5rem;
   font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 1rem;
@@ -208,18 +211,19 @@ const goHome = () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  width: 100%;
 }
 
-.submit-button:hover:not(:disabled) {
+.action-button:hover:not(:disabled) {
   background: var(--color-accent80);
   transform: translateY(-1px);
 }
 
-.submit-button:active:not(:disabled) {
+.action-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.submit-button:disabled {
+.action-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -245,9 +249,13 @@ const goHome = () => {
   background: rgba(44, 125, 160, 0.1);
   border: 2px solid var(--color-accent60);
   border-radius: 0.5rem;
+}
+
+.success-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .success-icon {
@@ -265,6 +273,46 @@ const goHome = () => {
 .success-text {
   color: var(--color70);
   font-size: 0.875rem;
+}
+
+.mnemonic-box {
+  background: var(--color20);
+  border: 2px solid var(--color40);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.mnemonic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.mnemonic-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mnemonic-phrase {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--color90);
+  word-break: break-all;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.warning-text {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.75rem;
+  font-weight: 500;
 }
 
 .error-message {
@@ -285,25 +333,6 @@ const goHome = () => {
   color: #ef4444;
 }
 
-.home-button {
-  margin-top: 1.5rem;
-  width: 100%;
-  background: var(--color20);
-  color: var(--color90);
-  border: 2px solid var(--color40);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.home-button:hover {
-  background: var(--color30);
-  border-color: var(--color-accent60);
-}
-
 @media (max-width: 768px) {
   .create-wallet-page {
     padding: 1rem;
@@ -318,7 +347,7 @@ const goHome = () => {
     margin-bottom: 1.5rem;
   }
 
-  .submit-button {
+  .action-button {
     padding: 0.75rem 1.25rem;
   }
 }
@@ -334,6 +363,10 @@ const goHome = () => {
 
   .form-group {
     gap: 0.375rem;
+  }
+
+  .mnemonic-box {
+    padding: 0.75rem;
   }
 }
 </style>
