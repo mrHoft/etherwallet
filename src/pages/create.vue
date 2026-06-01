@@ -6,15 +6,8 @@
       <form v-if="!showSuccess" @submit.prevent="handleSubmit" class="wallet-form">
         <div class="form-group">
           <label for="wallet-name" class="form-label">Wallet Name</label>
-          <input
-            id="wallet-name"
-            v-model="walletName"
-            type="text"
-            class="form-input"
-            placeholder="My Ethereum Wallet"
-            maxlength="50"
-            required
-          />
+          <input id="wallet-name" v-model="walletName" type="text" class="form-input" placeholder="My Ethereum Wallet"
+            maxlength="50" required />
         </div>
 
         <div class="form-group">
@@ -31,19 +24,22 @@
 
       <div v-if="showSuccess && walletResult" class="success-message">
         <div class="success-header">
-          <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
           <div>
             <h3 class="success-title">{{ createdWalletName }} wallet Created Successfully!</h3>
-            <p class="success-text"><strong>IMPORTANT:</strong> Please save your mnemonic phrase securely. You will need it to recover your wallet.</p>
+            <p class="success-text"><strong>IMPORTANT:</strong> Please save your mnemonic phrase securely. You will need
+              it to recover your wallet.</p>
           </div>
         </div>
 
         <div class="mnemonic-box">
           <div class="mnemonic-header">
             <span class="mnemonic-label">Recovery Phrase</span>
-            <CopyIcon :mnemonic="walletResult.mnemonicPhrase" @copy-success="onCopySuccess" />
+            <CopyIcon :text="walletResult.mnemonicPhrase" @copy-success="onCopySuccess" />
           </div>
           <p class="mnemonic-phrase">{{ walletResult.mnemonicPhrase }}</p>
         </div>
@@ -52,8 +48,9 @@
       </div>
 
       <div v-if="errorMessage" class="error-message">
-        <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+          fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
         </svg>
         <span>{{ errorMessage }}</span>
       </div>
@@ -88,7 +85,7 @@ const onPassphraseComplete = (value: string) => {
   passphrase.value = value
 }
 
-const onCopySuccess = () => {}
+const onCopySuccess = () => { }
 
 const handleSubmit = async () => {
   if (!isFormValid.value) {
@@ -175,7 +172,7 @@ const goHome = () => {
 .form-input {
   padding: 0.75rem 1rem;
   background: var(--color20);
-  border: 2px solid var(--color40);
+  border: var(--border-thickness) solid var(--color40);
   border-radius: 0.5rem;
   color: var(--color90);
   font-size: 1rem;
@@ -231,7 +228,7 @@ const goHome = () => {
 .loading-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: var(--border-thickness) solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -247,7 +244,7 @@ const goHome = () => {
   margin-top: 1.5rem;
   padding: 1rem;
   background: rgba(44, 125, 160, 0.1);
-  border: 2px solid var(--color-accent60);
+  border: var(--border-thickness) solid var(--color-accent60);
   border-radius: 0.5rem;
 }
 
@@ -277,7 +274,7 @@ const goHome = () => {
 
 .mnemonic-box {
   background: var(--color20);
-  border: 2px solid var(--color40);
+  border: var(--border-thickness) solid var(--color40);
   border-radius: 0.5rem;
   padding: 1rem;
   margin: 1rem 0;
@@ -319,7 +316,7 @@ const goHome = () => {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   background: rgba(220, 38, 38, 0.1);
-  border: 2px solid #ef4444;
+  border: var(--border-thickness) solid #ef4444;
   border-radius: 0.5rem;
   color: #ef4444;
   font-size: 0.875rem;

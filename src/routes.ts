@@ -11,7 +11,7 @@ export interface Route {
 export const routes: Route[] = [
   { path: '/', component: PageHome },
   { path: '/create', component: PageCreateWallet },
-  { path: '/404', component: PageNotFound }
+  { path: '**', component: PageNotFound }
 ]
 
 export const getRouteComponent = (path: string): Component => {

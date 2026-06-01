@@ -2,14 +2,9 @@
 <template>
   <nav class="navigation">
     <div class="navigation__container">
-      <button
-        v-for="route in navigationRoutes"
-        :key="route.path"
-        class="navigation__button"
-        :class="{ 'navigation__button--active': currentPath === route.path }"
-        :disabled="currentPath === route.path"
-        @click="navigateTo(route.path)"
-      >
+      <button v-for="route in navigationRoutes" :key="route.path" class="navigation__button"
+        :class="{ 'navigation__button--active': currentPath === route.path }" :disabled="currentPath === route.path"
+        @click="navigateTo(route.path)">
         <svg class="navigation__icon" viewBox="0 0 24 24" fill="currentColor">
           <path :d="route.icon" />
         </svg>
@@ -18,7 +13,7 @@
 
       <button class="navigation__button" @click="navigateToRandom">
         <svg class="navigation__icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
         </svg>
         <span class="navigation__label">Not Found</span>
       </button>
@@ -63,7 +58,7 @@ const navigateTo = (path: string) => {
 
 const navigateToRandom = () => {
   const sequence = Array.from(
-    { length:Math.floor(Math.random() * 3) + 4 },
+    { length: Math.floor(Math.random() * 3) + 4 },
     () => String.fromCharCode(Math.floor(Math.random() * 25) + 97)
   )
   const randomPath = `/${sequence.join('')}`
@@ -89,7 +84,7 @@ onUnmounted(() => {
   right: 0;
   background: var(--color20);
   backdrop-filter: blur(10px);
-  border-top: 1px solid var(--color40);
+  border-top: var(--border-thickness) solid var(--color40);
   box-shadow: var(--shadow);
   z-index: 1000;
 }
@@ -136,6 +131,7 @@ onUnmounted(() => {
 
 .navigation__button:disabled {
   opacity: 0.6;
+  cursor: default;
 }
 
 .navigation__icon {
