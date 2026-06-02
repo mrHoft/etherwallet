@@ -33,6 +33,7 @@ const handleCreateWallet = () => {
 
 <style scoped>
 .wallet-card {
+  width: 300px;
   aspect-ratio: 1.75;
   background: linear-gradient(135deg, var(--color10) 0%, var(--color20) 100%);
   border-radius: 1rem;

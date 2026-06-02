@@ -7,7 +7,7 @@
         <p class="message">
           Oops! The page you're looking for doesn't exist or has been moved.
         </p>
-        <button @click="goHome" class="home-button">← Back to Home</button>
+        <button @click="goHome" class="back-button">← Back to Home</button>
       </div>
     </div>
   </div>
@@ -26,7 +26,6 @@ const goHome = () => {
 .not-found-page {
   height: 100%;
   background: var(--color00);
-  padding: 1.5rem;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -69,11 +68,11 @@ const goHome = () => {
   line-height: 1.5;
 }
 
-.home-button {
+.back-button {
   background: var(--color-accent60);
   color: white;
   border: none;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
@@ -84,15 +83,11 @@ const goHome = () => {
   gap: 0.5rem;
 }
 
-.home-button:hover {
+.back-button:hover {
   background: var(--color-accent80);
 }
 
 @media (max-width: 768px) {
-  .not-found-page {
-    padding: 1rem;
-  }
-
   .container {
     padding: 2rem 1.5rem;
   }
@@ -121,11 +116,6 @@ const goHome = () => {
 
   .title {
     font-size: 1.25rem;
-  }
-
-  .home-button {
-    padding: 0.75rem 1.25rem;
-    font-size: 0.875rem;
   }
 }
 </style>

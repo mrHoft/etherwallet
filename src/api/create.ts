@@ -10,18 +10,18 @@ export interface WalletResult {
 
 /**
  * Creates a new Ethereum wallet with mnemonic phrase
- * @param passphrase - BIP39 passphrase (25th extension word)
+ * @param password - BIP39 password (25th extension word)
  * @returns Wallet information including address, private key, and mnemonic
  */
-export async function createWallet(passphrase: string): Promise<WalletResult> {
+export async function createWallet(password: string): Promise<WalletResult> {
   const now = Date.now()
   const mnemonic = ethers.Mnemonic.fromEntropy(
     ethers.randomBytes(16), // 128 bits = 12 words
-    passphrase
+    password
   )
 
   const wallet = ethers.HDNodeWallet.fromMnemonic(mnemonic)
-  const encryptedJson = await wallet.encrypt(passphrase)
+  const encryptedJson = await wallet.encrypt(password)
 
   console.log(`Creation take: ${Date.now() - now}ms`)
 
@@ -35,21 +35,23 @@ export async function createWallet(passphrase: string): Promise<WalletResult> {
 }
 
 /**
- * Creates multiple wallets from the same mnemonic
+ * Creates wallet from the mnemonic
  * @param mnemonic - Existing mnemonic phrase
- * @param passphrase - BIP39 extension word
+ * @param password - BIP39 extension word
  */
-export async function createWalletsFromMnemonic(mnemonicPhrase: string, passphrase: string, index = 0): Promise<WalletResult> {
-
-  const path = `m/44'/60'/0'/0/${index}`
-  const wallet = ethers.HDNodeWallet.fromPhrase(mnemonicPhrase, passphrase, path)
-  const encryptedJson = await wallet.encrypt(passphrase)
+export async function createWalletFromMnemonic(mnemonicPhrase: string, password: string): Promise<WalletResult> {
+  const wallet = ethers.HDNodeWallet.fromPhrase(mnemonicPhrase, password)
+  const encryptedJson = await wallet.encrypt(password)
 
   return {
     address: wallet.address,
     privateKey: wallet.privateKey,
     mnemonicPhrase,
-    derivationPath: path,
+    derivationPath: wallet.path,
     encryptedJson
   }
+}
+
+export function decryptWallet(encryptedJson: string, password: string) {
+  return ethers.Wallet.fromEncryptedJson(encryptedJson, password)
 }

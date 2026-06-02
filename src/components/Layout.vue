@@ -13,4 +13,8 @@ import Navigation from './Navigation.vue'
 .main {
   height: calc(100vh - 4rem);
 }
+
+.main>* {
+  padding: 1rem 1rem 5rem;
+}
 </style>

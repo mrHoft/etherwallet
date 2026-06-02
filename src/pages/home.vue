@@ -1,6 +1,6 @@
 <template>
-  <div class="wallet-list">
-    <div class="wallets-grid">
+  <section>
+    <div class="wallets">
       <template v-if="walletEntries.length === 0">
         <WalletNew />
       </template>
@@ -11,7 +11,7 @@
       </template>
     </div>
     <ModalQRCode ref="modalQRRef" />
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -32,9 +32,9 @@ interface WalletData {
   [key: string]: unknown
 }
 
-const getAddressFromJson = (encryptedJson: unknown): string => {
+const getAddressFromJson = (encryptedJson: string): string => {
   try {
-    const parsedData: WalletData = JSON.parse(encryptedJson as string)
+    const parsedData: WalletData = JSON.parse(encryptedJson)
     return parsedData.address || ''
   } catch (error) {
     console.error('Failed to parse wallet JSON:', error)
@@ -43,19 +43,16 @@ const getAddressFromJson = (encryptedJson: unknown): string => {
 }
 
 const walletEntries = computed(() => {
-  const state = storage.getState()
+  const state = storage.get<Record<string, string>>('wallet') || {}
   return Object.entries(state)
 })
 </script>
 
 <style scoped>
-.wallet-list {
-  padding: 1rem 1rem 5rem;
-}
-
-.wallets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+.wallets {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="wallet-card">
+  <div class="wallet-card" @click="navigateTo(`/wallet?address=${address}`)">
     <div class="card-header">
       <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
       <div class="qr-placeholder" @click.stop="showQR">
@@ -24,6 +24,9 @@
 
 <script setup lang="ts">
 import CopyIcon from '~/components/CopyIcon.vue'
+import { useNavigation } from '~/composables/useNavigation'
+
+const { navigateTo } = useNavigation()
 
 const props = defineProps<{ walletName: string, address: string }>()
 
@@ -48,6 +51,7 @@ const formatAddress = (address: string): string => {
 
 <style scoped>
 .wallet-card {
+  width: 300px;
   aspect-ratio: 1.75;
   background: linear-gradient(135deg, var(--color10) 0%, var(--color20) 100%);
   border-radius: 1rem;

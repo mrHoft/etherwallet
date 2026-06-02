@@ -1,124 +1,68 @@
 <template>
   <div class="create-wallet-page">
     <div class="container">
-      <h1 class="title">Create a new wallet</h1>
+      <h1 class="title">{{ isRestoring() ? 'Restore Wallet' : 'Create a new wallet' }}</h1>
 
-      <form v-if="!showSuccess" @submit.prevent="handleSubmit" class="wallet-form">
-        <div class="form-group">
-          <label for="wallet-name" class="form-label">Wallet Name</label>
-          <input id="wallet-name" v-model="walletName" type="text" class="form-input" placeholder="My Ethereum Wallet"
-            maxlength="50" required />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Passphrase (Required)</label>
-          <Passphrase v-model="passphrase" :max-length="6" @complete="onPassphraseComplete" />
-          <p class="form-hint">Enter a 6-character passphrase for security (minimum 3 characters)</p>
-        </div>
-
-        <button type="submit" class="action-button" :disabled="isLoading || !isFormValid">
-          <span v-if="isLoading" class="loading-spinner"></span>
-          <span v-else>Create Wallet</span>
-        </button>
-      </form>
-
-      <div v-if="showSuccess && walletResult" class="success-message">
-        <div class="success-header">
-          <svg class="success-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-            fill="currentColor">
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+      <div v-if="!selectedMethod" class="method-selector">
+        <button class="method-card" @click="selectMethod('create')">
+          <svg class="method-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14" />
           </svg>
-          <div>
-            <h3 class="success-title">{{ createdWalletName }} wallet Created Successfully!</h3>
-            <p class="success-text"><strong>IMPORTANT:</strong> Please save your mnemonic phrase securely. You will need
-              it to recover your wallet.</p>
-          </div>
-        </div>
+          <h3 class="method-title">Create New Wallet</h3>
+          <p class="method-description">Generate a new wallet with a fresh mnemonic phrase</p>
+        </button>
 
-        <div class="mnemonic-box">
-          <div class="mnemonic-header">
-            <span class="mnemonic-label">Recovery Phrase</span>
-            <CopyIcon :text="walletResult.mnemonicPhrase" @copy-success="onCopySuccess" />
-          </div>
-          <p class="mnemonic-phrase">{{ walletResult.mnemonicPhrase }}</p>
-        </div>
-
-        <p class="warning-text">⚠️ Never share your mnemonic phrase with anyone. Store it in a safe place.</p>
+        <button class="method-card" @click="selectMethod('restore')">
+          <svg class="method-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12H4M12 4l8 8-8 8" />
+          </svg>
+          <h3 class="method-title">Restore Existing Wallet</h3>
+          <p class="method-description">Import wallet using your recovery phrase</p>
+        </button>
       </div>
 
-      <div v-if="errorMessage" class="error-message">
-        <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-          fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-        </svg>
-        <span>{{ errorMessage }}</span>
-      </div>
+      <CreateWallet v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'"
+        @success="handleWalletCreated" @cancel="resetSelection" />
 
-      <button v-if="showSuccess" @click="goHome" class="action-button">← Home</button>
+      <RestoreWallet v-else-if="selectedMethod === 'restore'" :show="selectedMethod === 'restore'"
+        @success="handleWalletRestored" @cancel="resetSelection" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import Passphrase from '~/components/PassPhrase.vue'
-import CopyIcon from '~/components/CopyIcon.vue'
-import { createWallet, type WalletResult } from '~/api/create'
-import { storage } from '~/utils/storage'
+import { ref } from 'vue'
+import CreateWallet from '~/components/CreateWallet.vue'
+import RestoreWallet from '~/components/RestoreWallet.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
+type SelectedMethod = 'create' | 'restore' | null
+
 const { navigateTo } = useNavigation()
-const walletName = ref<string>('')
-const passphrase = ref<string>('')
-const isLoading = ref<boolean>(false)
-const showSuccess = ref<boolean>(false)
-const errorMessage = ref<string>('')
-const walletResult = ref<WalletResult | null>(null)
-const createdWalletName = ref<string>('')
+const selectedMethod = ref<SelectedMethod>(null)
 
-const isFormValid = computed<boolean>(() => {
-  return walletName.value.trim().length > 0 && passphrase.value.length >= 3
-})
+const isRestoring = () => selectedMethod.value === 'create'
 
-const onPassphraseComplete = (value: string) => {
-  passphrase.value = value
+const selectMethod = (method: SelectedMethod) => {
+  selectedMethod.value = method
 }
 
-const onCopySuccess = () => { }
-
-const handleSubmit = async () => {
-  if (!isFormValid.value) {
-    errorMessage.value = 'Please enter a wallet name and valid passphrase (minimum 3 characters)'
-    return
-  }
-
-  isLoading.value = true
-  errorMessage.value = ''
-  showSuccess.value = false
-
-  try {
-    const result = await createWallet(passphrase.value)
-    walletResult.value = result
-    createdWalletName.value = walletName.value.trim()
-
-    const recordKey = walletName.value.trim().replace(/ /g, '_')
-    storage.set(recordKey, result.encryptedJson)
-
-    showSuccess.value = true
-
-    walletName.value = ''
-    passphrase.value = ''
-  } catch (error) {
-    console.error('Failed to create wallet:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to create wallet. Please try again.'
-  } finally {
-    isLoading.value = false
-  }
+const resetSelection = () => {
+  selectedMethod.value = null
 }
 
-const goHome = () => {
-  navigateTo('/')
+const handleWalletCreated = () => {
+  setTimeout(() => {
+    navigateTo('/')
+  }, 3000)
+}
+
+const handleWalletRestored = () => {
+  setTimeout(() => {
+    navigateTo('/')
+  }, 3000)
 }
 </script>
 
@@ -126,17 +70,16 @@ const goHome = () => {
 .create-wallet-page {
   height: 100%;
   background: var(--color00);
-  padding: 1.5rem;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .container {
   max-width: 600px;
   width: 100%;
-  margin: 0 auto;
   background: var(--color10);
   border-radius: 1rem;
   padding: 2rem;
@@ -151,219 +94,58 @@ const goHome = () => {
   text-align: center;
 }
 
-.wallet-form {
+.method-selector {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color80);
-}
-
-.form-input {
-  padding: 0.75rem 1rem;
+.method-card {
   background: var(--color20);
   border: var(--border-thickness) solid var(--color40);
-  border-radius: 0.5rem;
-  color: var(--color90);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-accent60);
-  background: var(--color10);
-}
-
-.form-input::placeholder {
-  color: var(--color60);
-}
-
-.form-hint {
-  font-size: 0.75rem;
-  color: var(--color60);
-  margin-top: 0.25rem;
-}
-
-.action-button {
-  background: var(--color-accent60);
-  color: white;
-  border: none;
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  text-align: left;
   width: 100%;
 }
 
-.action-button:hover:not(:disabled) {
-  background: var(--color-accent80);
-  transform: translateY(-1px);
+.method-card:hover {
+  border-color: var(--color-accent60);
+  background: var(--color30);
+  transform: translateY(-2px);
 }
 
-.action-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.action-button:disabled {
-  opacity: 0.5;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: var(--border-thickness) solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.success-message {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(44, 125, 160, 0.1);
-  border: var(--border-thickness) solid var(--color-accent60);
-  border-radius: 0.5rem;
-}
-
-.success-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.success-icon {
-  flex-shrink: 0;
+.method-icon {
   color: var(--color-accent60);
-}
-
-.success-title {
-  color: var(--color90);
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.success-text {
-  color: var(--color70);
-  font-size: 0.875rem;
-}
-
-.mnemonic-box {
-  background: var(--color20);
-  border: var(--border-thickness) solid var(--color40);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin: 1rem 0;
-  position: relative;
-}
-
-.mnemonic-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 0.75rem;
 }
 
-.mnemonic-label {
-  font-size: 0.75rem;
+.method-title {
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color60);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.mnemonic-phrase {
-  font-family: monospace;
-  font-size: 0.875rem;
   color: var(--color90);
-  word-break: break-all;
-  line-height: 1.5;
-  margin: 0;
+  margin-bottom: 0.5rem;
 }
 
-.warning-text {
-  font-size: 0.75rem;
-  color: #ef4444;
-  margin-top: 0.75rem;
-  font-weight: 500;
-}
-
-.error-message {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  background: rgba(220, 38, 38, 0.1);
-  border: var(--border-thickness) solid #ef4444;
-  border-radius: 0.5rem;
-  color: #ef4444;
+.method-description {
   font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.error-icon {
-  flex-shrink: 0;
-  color: #ef4444;
+  color: var(--color70);
+  line-height: 1.4;
 }
 
 @media (max-width: 768px) {
-  .create-wallet-page {
-    padding: 1rem;
-  }
-
-  .container {
-    padding: 1.5rem;
-  }
-
   .title {
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
   }
 
-  .action-button {
-    padding: 0.75rem 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
+  .method-card {
     padding: 1rem;
   }
 
-  .title {
-    font-size: 1.25rem;
-  }
-
-  .form-group {
-    gap: 0.375rem;
-  }
-
-  .mnemonic-box {
-    padding: 0.75rem;
+  .method-title {
+    font-size: 1rem;
   }
 }
 </style>

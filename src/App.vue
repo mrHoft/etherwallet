@@ -12,7 +12,6 @@ import { getRouteComponent } from './routes'
 const currentComponent = shallowRef(markRaw(getRouteComponent(window.location.pathname)))
 
 const handleNavigation = () => {
-  console.log('location:', window.location.pathname)
   currentComponent.value = markRaw(getRouteComponent(window.location.pathname))
 }
 
