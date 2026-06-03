@@ -1,7 +1,7 @@
 <template>
   <div class="delete-wallet">
-    <div v-if="!showDeleteConfirmation" class="delete-button-container">
-      <button type="button" class="delete-button" @click="showDeleteConfirmation = true">
+    <div v-if="!showDeleteConfirmation" class="button-delete-container">
+      <button type="button" class="button-delete" @click="showDeleteConfirmation = true">
         Delete Wallet
       </button>
     </div>
@@ -20,12 +20,11 @@
         {{ errorMessage }}
       </div>
 
-      <div class="action-buttons">
-        <button type="button" class="cancel-button" @click="cancelDelete">
+      <div class="btns">
+        <button type="button" class="button-cancel" @click="cancelDelete">
           Cancel
         </button>
-        <button type="button" class="confirm-delete-button" :disabled="!isFormValid || isLoading"
-          @click="confirmDelete">
+        <button type="button" class="button-confirm" :disabled="!isFormValid || isLoading" @click="confirmDelete">
           {{ isLoading ? 'Verifying...' : 'Permanently Delete Wallet' }}
         </button>
       </div>
@@ -116,12 +115,12 @@ defineExpose({
 </script>
 
 <style scoped>
-.delete-button-container {
+.button-delete-container {
   display: flex;
   justify-content: flex-start;
 }
 
-.delete-button {
+.button-delete {
   padding: 0.75rem 1.5rem;
   background-color: rgba(220, 38, 38, 0.1);
   color: #ef4444;
@@ -134,13 +133,8 @@ defineExpose({
   transition: all 0.2s ease;
 }
 
-.delete-button:hover {
+.button-delete:hover {
   background-color: rgba(220, 38, 38, 0.2);
-  transform: translateY(-0.0625rem);
-}
-
-.delete-button:active {
-  transform: translateY(0);
 }
 
 .delete-confirmation {
@@ -183,13 +177,13 @@ defineExpose({
   border: var(--border-thickness) solid #ef4444;
 }
 
-.action-buttons {
+.btns {
   display: flex;
   gap: 1rem;
   margin-top: 0.5rem;
 }
 
-.cancel-button {
+.button-cancel {
   padding: 0.75rem 1.5rem;
   background-color: var(--color20);
   color: var(--color80);
@@ -202,12 +196,12 @@ defineExpose({
   transition: all 0.2s ease;
 }
 
-.cancel-button:hover {
+.button-cancel:hover {
   background-color: var(--color30);
   border-color: var(--color50);
 }
 
-.confirm-delete-button {
+.button-confirm {
   padding: 0.75rem 1.5rem;
   background-color: #ef4444;
   color: white;
@@ -220,17 +214,11 @@ defineExpose({
   transition: all 0.2s ease;
 }
 
-.confirm-delete-button:hover:not(:disabled) {
+.button-confirm:hover:not(:disabled) {
   background-color: #dc2626;
-  transform: translateY(-0.0625rem);
 }
 
-.confirm-delete-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.confirm-delete-button:disabled {
+.button-confirm:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

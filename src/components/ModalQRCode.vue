@@ -47,11 +47,16 @@ const show = async (text: string): Promise<void> => {
     return
   }
 
-  currentText.value = text
+  if (!text.startsWith('0x')) {
+    currentText.value = `0x${text}`
+  } else {
+    currentText.value = text
+  }
+
   isVisible.value = true
 
   await nextTick()
-  await generateQRCode(text)
+  await generateQRCode(currentText.value)
 }
 
 const closeModal = (): void => {
@@ -86,13 +91,12 @@ defineExpose({
 }
 
 .modal-container {
-  background: var(--color10);
+  background-color: var(--color10);
   border-radius: 1rem;
   box-shadow: var(--shadow);
-  max-width: 450px;
+  max-width: 460px;
   width: 90%;
   max-height: 85vh;
-  overflow-y: auto;
   border: var(--border-thickness) solid var(--color40);
 }
 

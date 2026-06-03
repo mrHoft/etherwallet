@@ -2,7 +2,7 @@
   <div class="page-wallet">
     <div v-if="error" class="error-state">
       <p class="error-message">{{ error }}</p>
-      <button @click="navigateTo('/')" class="back-button">← Back to Home</button>
+      <ButtonBack />
     </div>
 
     <div v-else-if="walletData" class="wallet-content">
@@ -29,6 +29,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storage } from '~/utils/storage'
 import DeleteWallet from '~/components/DeleteWallet.vue'
 import WalletBalance from '~/components/WalletBalance.vue'
+import ButtonBack from '~/components/ButtonBack.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
 const { navigateTo } = useNavigation()
@@ -174,6 +175,7 @@ onMounted(() => {
 }
 
 .funds-section {
+  position: relative;
   background-color: var(--color10);
   border-radius: 0.5rem;
   padding: 1.5rem;

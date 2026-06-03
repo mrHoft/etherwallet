@@ -7,19 +7,14 @@
         <p class="message">
           Oops! The page you're looking for doesn't exist or has been moved.
         </p>
-        <button @click="goHome" class="back-button">← Back to Home</button>
+        <ButtonBack />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useNavigation } from '~/composables/useNavigation'
-const { navigateTo } = useNavigation()
-
-const goHome = () => {
-  navigateTo('/')
-}
+import ButtonBack from '~/components/ButtonBack.vue'
 </script>
 
 <style scoped>
@@ -66,25 +61,6 @@ const goHome = () => {
   color: var(--color70);
   margin-bottom: 2rem;
   line-height: 1.5;
-}
-
-.back-button {
-  background: var(--color-accent60);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.back-button:hover {
-  background: var(--color-accent80);
 }
 
 @media (max-width: 768px) {

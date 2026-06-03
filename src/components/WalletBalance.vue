@@ -1,13 +1,10 @@
 <template>
   <div class="wallet-balance">
-    <div v-if="initialLoading && tokenBalances.length === 0" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Loading balances...</p>
-    </div>
+    <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances"
+      class="button-refresh">Refresh</button>
 
-    <div v-else-if="error && tokenBalances.length === 0" class="error-state-mini">
+    <div v-if="error" class="error-state-mini">
       <p class="error-message-mini">{{ error }}</p>
-      <button @click="refreshBalances" class="retry-button">Retry</button>
     </div>
 
     <div v-else class="balances-container">
@@ -182,27 +179,18 @@ const fetchTokenBalance = async (symbol: string, contractAddress: string): Promi
 const refreshBalances = async (): Promise<void> => {
   error.value = ''
   initialLoading.value = true
-
-  // Clear existing balances
   tokenBalances.value = []
   pendingFetches.value = 0
 
   try {
-    // Start fetching ETH and tokens concurrently
     const fetchPromises = []
-
-    // Fetch ETH
     fetchPromises.push(fetchEthBalance())
-
-    // Fetch all tokens
     for (const [symbol, { contractAddress }] of Object.entries(TOKEN_INFO)) {
       fetchPromises.push(fetchTokenBalance(symbol, contractAddress))
     }
 
-    // Wait for all fetches to complete (they will update UI as they finish)
     await Promise.allSettled(fetchPromises)
 
-    // Check if any balances were loaded
     if (tokenBalances.value.length === 0) {
       error.value = 'No token balances found for this address'
     }
@@ -229,24 +217,6 @@ defineExpose({
   width: 100%;
 }
 
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 200px;
-}
-
-.loading-spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 0.1875rem solid var(--color40);
-  border-top-color: var(--color-accent60);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
 .loading-spinner-small {
   width: 1.25rem;
   height: 1.25rem;
@@ -260,13 +230,6 @@ defineExpose({
   to {
     transform: rotate(360deg);
   }
-}
-
-.loading-text {
-  color: var(--color70);
-  font-family: var(--sans);
-  font-size: 0.875rem;
-  margin: 0;
 }
 
 .loading-text-small {
@@ -294,7 +257,10 @@ defineExpose({
   margin: 0;
 }
 
-.retry-button {
+.button-refresh {
+  position: absolute;
+  right: 1.5rem;
+  top: 1.5rem;
   padding: 0.5rem 1rem;
   background-color: var(--color-accent60);
   color: white;
@@ -306,9 +272,8 @@ defineExpose({
   transition: all 0.2s ease;
 }
 
-.retry-button:hover {
+.button-refresh:hover {
   background-color: var(--color-accent80);
-  transform: translateY(-0.0625rem);
 }
 
 .balances-container {
@@ -325,7 +290,6 @@ defineExpose({
   background-color: var(--color20);
   border-radius: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
-  transition: all 0.2s ease;
   animation: fadeIn 0.3s ease-in;
 }
 
@@ -341,12 +305,6 @@ defineExpose({
   }
 }
 
-.balance-card:hover {
-  background-color: var(--color30);
-  border-color: var(--color50);
-  transform: translateX(0.125rem);
-}
-
 .token-icon {
   width: 2.5rem;
   height: 2.5rem;
@@ -356,7 +314,7 @@ defineExpose({
   font-size: 1.5rem;
   font-weight: 600;
   background-color: var(--color10);
-  border-radius: 0.5rem;
+  border-radius: 50%;
   border: var(--border-thickness) solid var(--color40);
 }
 
