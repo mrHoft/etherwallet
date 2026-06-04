@@ -8,9 +8,67 @@ interface RequestParams {
   [key: string]: string | number | undefined;
 }
 
-/**
- * Core API request function using fetch (V2)
- */
+class EtherscanRequestQueue {
+  private queue: Array<{
+    params: RequestParams;
+    timestamp: number;
+    resolve: (value: any) => void;
+    reject: (reason: any) => void;
+  }> = [];
+
+  private isProcessing = false;
+  private lastRequestTime = 0;
+  private readonly minDelayMs: number;
+
+  constructor(minDelayMs: number = 350) {
+    this.minDelayMs = minDelayMs;
+  }
+
+  async enqueue<T>(params: RequestParams): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.queue.push({
+        params,
+        timestamp: Date.now(),
+        resolve,
+        reject,
+      });
+
+      if (!this.isProcessing) {
+        this.processQueue();
+      }
+    });
+  }
+
+  private async processQueue<T>(): Promise<void> {
+    this.isProcessing = true;
+
+    while (this.queue.length > 0) {
+      const currentRequest = this.queue[0];
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+
+      if (this.lastRequestTime > 0 && timeSinceLastRequest < this.minDelayMs) {
+        const waitTime = this.minDelayMs - timeSinceLastRequest;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+
+      this.queue.shift();
+
+      try {
+        this.lastRequestTime = Date.now();
+        const result = await etherscanRequest<T>(currentRequest.params);
+        currentRequest.resolve(result);
+      } catch (error) {
+        currentRequest.reject(error);
+      }
+    }
+
+    this.isProcessing = false;
+  }
+}
+
+const requestQueue = new EtherscanRequestQueue(400);
+
 async function etherscanRequest<T>(params: RequestParams): Promise<T> {
   const queryParams = new URLSearchParams({
     apikey: API_KEY,
@@ -35,8 +93,6 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
 
     const data = await response.json();
 
-    console.log(data)
-
     if (data.status !== '1') {
       throw new Error(data.result || data.message || 'Etherscan API error');
     }
@@ -58,7 +114,7 @@ export async function getETHBalance(
   address: string,
   chainid: number = 1
 ): Promise<string> {
-  const response = await etherscanRequest<{ result: string }>({
+  const response = await requestQueue.enqueue<{ result: string }>({
     chainid,
     module: 'account',
     action: 'balance',
@@ -81,7 +137,7 @@ export async function getTokenBalance(
   tokenAddress: string = '0xdAC17F958D2ee523a2206206994597C13D831ec7'/* USDT */,
   chainid: number = 1
 ): Promise<string> {
-  const response = await etherscanRequest<{ result: string }>({
+  const response = await requestQueue.enqueue<{ result: string }>({
     chainid,
     module: 'account',
     action: 'tokenbalance',
