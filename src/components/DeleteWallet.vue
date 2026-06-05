@@ -115,6 +115,10 @@ defineExpose({
 </script>
 
 <style scoped>
+.delete-wallet {
+  margin-top: 1rem;
+}
+
 .button-delete-container {
   display: flex;
   justify-content: flex-start;

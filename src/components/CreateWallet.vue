@@ -119,7 +119,7 @@ const handleSubmit = async () => {
     storage.set(`wallet.${key}`, result.encryptedJson)
 
     showSuccess.value = true
-    emit('success', walletName.value.trim())
+    // emit('success', walletName.value.trim())
   } catch (error) {
     console.error('Failed to create wallet:', error)
     errorMessage.value = error instanceof Error ? error.message : 'Failed to create wallet. Please try again.'

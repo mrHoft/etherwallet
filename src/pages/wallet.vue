@@ -17,8 +17,10 @@
 
       <section class="dangerous-section">
         <h2 class="section-title">Danger Zone</h2>
+        <CheckWallet :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
+          @decrypt-error="handleError" />
         <DeleteWallet :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
-          @delete-success="handleDeleteSuccess" @delete-error="handleDeleteError" @cancel="handleDeleteCancel" />
+          @delete-success="handleDeleteSuccess" @delete-error="handleError" @cancel="handleDeleteCancel" />
       </section>
     </div>
   </div>
@@ -28,6 +30,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { storage } from '~/utils/storage'
 import DeleteWallet from '~/components/DeleteWallet.vue'
+import CheckWallet from '~/components/CheckWallet.vue'
 import WalletBalance from '~/components/WalletBalance.vue'
 import ButtonBack from '~/components/ButtonBack.vue'
 import { useNavigation } from '~/composables/useNavigation'
@@ -92,8 +95,8 @@ const handleDeleteSuccess = async (): Promise<void> => {
   }
 }
 
-const handleDeleteError = (deleteError: string): void => {
-  error.value = deleteError
+const handleError = (text: string): void => {
+  error.value = text
 }
 
 const handleDeleteCancel = (): void => {
@@ -124,7 +127,6 @@ onMounted(() => {
 .page-wallet {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
 .error-state {
