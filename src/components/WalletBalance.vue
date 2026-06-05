@@ -1,7 +1,13 @@
 <template>
   <div class="wallet-balance">
-    <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances"
-      class="button-refresh">Refresh</button>
+    <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2">
+        <polygon fill="currentColor" points="12 16.25 12 22.25 8 19.25 12 16.25" />
+        <polygon fill="currentColor" points="12 1.75 12 7.75 16 4.75 12 1.75" />
+        <path stroke="currentColor" d="m6.71,16.96c-3.52-3.08-2.88-12.41,6.65-12.21" />
+        <path stroke="currentColor" d="m17.34,7.04c3.52,3.08,2.88,12.41-6.65,12.21" />
+      </svg>
+    </button>
 
     <div v-if="error" class="error-state-mini">
       <p class="error-message-mini">{{ error }}</p>
@@ -261,19 +267,21 @@ defineExpose({
   position: absolute;
   right: 1.5rem;
   top: 1.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem;
   background-color: var(--color-accent60);
   color: white;
   border: none;
   border-radius: 0.375rem;
-  font-family: var(--sans);
-  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .button-refresh:hover {
   background-color: var(--color-accent80);
+}
+
+.button-refresh>* {
+  display: block;
 }
 
 .balances-container {

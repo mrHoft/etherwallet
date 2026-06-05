@@ -6,10 +6,7 @@
       </button>
     </div>
     <div v-else-if="!isDecrypted" class="decrypt-form">
-      <div class="form-header">
-        <h3 class="form-title">View Wallet Details</h3>
-        <p class="form-description">Enter your password to view wallet recovery phrase</p>
-      </div>
+      <h3 class="form-title">View Wallet Details</h3>
 
       <div class="password-field">
         <label for="check-password" class="password-label">Wallet Password</label>
@@ -189,7 +186,7 @@ defineExpose({
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color90);
-  margin: 0 0 0.5rem 0;
+  margin: 0;
 }
 
 .form-description {

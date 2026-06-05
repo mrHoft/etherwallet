@@ -4,7 +4,7 @@
       <div v-if="isVisible" class="modal-overlay" @click.self="closeModal">
         <div class="modal-container">
           <div class="modal-header">
-            <h3 class="modal-title">ETH-20</h3>
+            <h3 class="modal-title">ERC20</h3>
             <button class="modal-close" @click="closeModal" aria-label="Close modal">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

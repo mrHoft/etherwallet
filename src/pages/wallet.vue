@@ -6,12 +6,10 @@
     </div>
 
     <div v-else-if="walletData" class="wallet-content">
-      <header class="wallet-header">
-        <h1 class="wallet-name">{{ formatWalletName(walletData.name) }}</h1>
-      </header>
+      <WalletName :wallet-name="walletData.name" @change="handleWalletNameChange" />
 
       <section class="funds-section">
-        <h2 class="section-title">Funds</h2>
+        <h2 class="section-title">Balance</h2>
         <WalletBalance :wallet-address="walletAddress" />
       </section>
 
@@ -32,6 +30,7 @@ import { storage } from '~/utils/storage'
 import DeleteWallet from '~/components/DeleteWallet.vue'
 import CheckWallet from '~/components/CheckWallet.vue'
 import WalletBalance from '~/components/WalletBalance.vue'
+import WalletName from '~/components/WalletName.vue'
 import ButtonBack from '~/components/ButtonBack.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
@@ -63,10 +62,6 @@ const getAddressFromJson = (encryptedJson: string): string => {
   } catch {
     return ''
   }
-}
-
-const formatWalletName = (name: string): string => {
-  return name.replace(/_/g, ' ')
 }
 
 const findWalletByAddress = (address: string): WalletEntry | null => {
@@ -101,6 +96,17 @@ const handleError = (text: string): void => {
 
 const handleDeleteCancel = (): void => {
   error.value = ''
+}
+
+const handleWalletNameChange = (newName: string) => {
+  if (!walletData.value) return
+  console.log(newName)
+  const key = newName.trim().replace(/ /g, '_')
+  const state = storage.get<Record<string, string>>('wallet') || {}
+  state[key] = state[walletData.value.name]
+  delete state[walletData.value.name]
+  storage.set('wallet', state)
+  walletData.value.name = key
 }
 
 onMounted(() => {
@@ -151,21 +157,7 @@ onMounted(() => {
 .wallet-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.wallet-header {
-  padding-bottom: 1rem;
-  border-bottom: var(--border-thickness) solid var(--color40);
-}
-
-.wallet-name {
-  font-family: var(--heading);
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--color90);
-  margin: 0;
-  word-break: break-word;
+  row-gap: 1rem;
 }
 
 .section-title {

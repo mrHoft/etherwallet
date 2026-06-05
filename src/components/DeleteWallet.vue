@@ -7,6 +7,7 @@
     </div>
 
     <div v-else class="delete-confirmation">
+      <h3 class="form-title">Delete Wallet</h3>
       <p class="confirmation-warning">
         ⚠️ This action cannot be undone. Please enter your password to confirm.
       </p>
@@ -145,6 +146,14 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.form-title {
+  font-family: var(--heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color90);
+  margin: 0;
 }
 
 .confirmation-warning {
