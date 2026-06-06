@@ -35,7 +35,11 @@ interface WalletData {
 const getAddressFromJson = (encryptedJson: string): string => {
   try {
     const parsedData: WalletData = JSON.parse(encryptedJson)
-    return parsedData.address || ''
+    if (!parsedData.address) return ''
+    if (!parsedData.address.startsWith('0x')) {
+      return `0x${parsedData.address}`
+    }
+    return parsedData.address
   } catch (error) {
     console.error('Failed to parse wallet JSON:', error)
     return ''

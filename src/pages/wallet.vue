@@ -65,7 +65,8 @@ const getAddressFromJson = (encryptedJson: string): string => {
 }
 
 const findWalletByAddress = (address: string): WalletEntry | null => {
-  const normalizedAddress = address.toLowerCase()
+  let normalizedAddress = address.toLowerCase()
+  if (normalizedAddress.startsWith('0x')) normalizedAddress = normalizedAddress.slice(2)
 
   for (const [name, encryptedJson] of walletEntries.value) {
     const walletAddressFromJson = getAddressFromJson(encryptedJson)
@@ -172,59 +173,14 @@ onMounted(() => {
   position: relative;
   background-color: var(--color10);
   border-radius: 0.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   border: var(--border-thickness) solid var(--color40);
 }
 
 .dangerous-section {
   background-color: var(--color10);
   border-radius: 0.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   border: var(--border-thickness) solid var(--color40);
-}
-
-.back-button {
-  background: var(--color-accent60);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-family: var(--sans);
-  font-weight: 500;
-}
-
-.back-button:hover {
-  background: var(--color-accent80);
-  transform: translateY(-0.0625rem);
-}
-
-.back-button:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-  .page-wallet {
-    padding: 0.5rem;
-  }
-
-  .wallet-name {
-    font-size: 1.5rem;
-  }
-
-  .section-title {
-    font-size: 1.25rem;
-  }
-
-  .funds-section,
-  .dangerous-section {
-    padding: 1rem;
-  }
 }
 </style>

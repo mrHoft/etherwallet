@@ -69,11 +69,9 @@ const handleWalletRestored = () => {
 <style scoped>
 .create-wallet-page {
   height: 100%;
-  background: var(--color00);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
   box-sizing: border-box;
 }
 

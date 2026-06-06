@@ -20,7 +20,6 @@ import ButtonBack from '~/components/ButtonBack.vue'
 <style scoped>
 .not-found-page {
   height: 100%;
-  background: var(--color00);
   box-sizing: border-box;
   display: flex;
   align-items: center;

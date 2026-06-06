@@ -1,7 +1,10 @@
 <template>
   <div class="wallet-card" @click="navigateTo(`/wallet?address=${address}`)">
     <div class="card-header">
-      <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
+      <div>
+        <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
+        <div>{{ balanceTotal }}</div>
+      </div>
       <div class="qr-placeholder" @click.stop="showQR">
         <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -23,11 +26,14 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import CopyIcon from '~/components/CopyIcon.vue'
 import { useNavigation } from '~/composables/useNavigation'
+import { getPortfolioValue } from '~/api/rpc';
+import { TOKEN_INFO } from '~/api/const';
 
 const { navigateTo } = useNavigation()
-
+const balanceTotal = ref<string>('')
 const props = defineProps<{ walletName: string, address: string }>()
 
 const emit = defineEmits<{ showQr: [address: string] }>()
@@ -47,13 +53,20 @@ const formatAddress = (address: string): string => {
   const last8 = address.slice(-8)
   return `... ${last8.slice(0, 4)} ${last8.slice(4, 8)}`
 }
+
+onMounted(() => {
+  getPortfolioValue(props.address, Object.keys(TOKEN_INFO)).then(data => {
+    balanceTotal.value = `$${data.totalUsdValue.toFixed(2)}`
+  }
+  )
+})
 </script>
 
 <style scoped>
 .wallet-card {
   width: 300px;
   aspect-ratio: 1.75;
-  background: linear-gradient(135deg, var(--color10) 0%, var(--color20) 100%);
+  /* background: linear-gradient(135deg, var(--color10) 0%, var(--color20) 100%); */
   border-radius: 1rem;
   padding: 1.5rem;
   border: var(--border-thickness) solid var(--color40);
@@ -64,6 +77,12 @@ const formatAddress = (address: string): string => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background-color: var(--color20);
+  background-image: url(/eth.svg);
+  background-size: 50%;
+  background-blend-mode: soft-light;
+  background-repeat: no-repeat;
+  background-position: 10% center;
 }
 
 .wallet-card::before {
@@ -98,7 +117,7 @@ const formatAddress = (address: string): string => {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color90);
-  margin: 0;
+  margin-top: 0;
   letter-spacing: -0.01em;
   text-transform: capitalize;
 }

@@ -1,13 +1,20 @@
 <template>
   <div class="wallet-balance">
-    <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2">
-        <polygon fill="currentColor" points="12 16.25 12 22.25 8 19.25 12 16.25" />
-        <polygon fill="currentColor" points="12 1.75 12 7.75 16 4.75 12 1.75" />
-        <path stroke="currentColor" d="m6.71,16.96c-3.52-3.08-2.88-12.41,6.65-12.21" />
-        <path stroke="currentColor" d="m17.34,7.04c3.52,3.08,2.88,12.41-6.65,12.21" />
-      </svg>
-    </button>
+    <div class="balance-header">
+      <div class="total-usd" v-if="!initialLoading && totalUsdValue > 0">
+        <span class="total-label">Total Balance</span>
+        <span class="total-amount">${{ formatUsd(totalUsdValue) }}</span>
+      </div>
+      <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh"
+        :disabled="refreshing">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2">
+          <polygon fill="currentColor" points="12 16.25 12 22.25 8 19.25 12 16.25" />
+          <polygon fill="currentColor" points="12 1.75 12 7.75 16 4.75 12 1.75" />
+          <path stroke="currentColor" d="m6.71,16.96c-3.52-3.08-2.88-12.41,6.65-12.21" />
+          <path stroke="currentColor" d="m17.34,7.04c3.52,3.08,2.88,12.41-6.65,12.21" />
+        </svg>
+      </button>
+    </div>
 
     <div v-if="error" class="error-state-mini">
       <p class="error-message-mini">{{ error }}</p>
@@ -24,8 +31,13 @@
           <p class="token-symbol">{{ token.symbol }}</p>
         </div>
         <div class="balance-amount">
-          <span class="amount">{{ token.formattedBalance }}</span>
-          <span v-if="token.loading" class="loading-indicator">...</span>
+          <div class="amount-wrapper">
+            <span class="amount">{{ token.formattedBalance }}</span>
+            <span v-if="token.loading" class="loading-indicator">...</span>
+          </div>
+          <span v-if="token.usdValue !== undefined && !token.loading" class="usd-value">
+            ${{ formatUsd(token.usdValue) }}
+          </span>
         </div>
       </div>
 
@@ -35,7 +47,7 @@
 
       <div v-if="hasPendingFetches" class="loading-more">
         <div class="loading-spinner-small"></div>
-        <p class="loading-text-small">Loading more balances...</p>
+        <p class="loading-text-small">Loading balances...</p>
       </div>
     </div>
   </div>
@@ -43,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getETHBalance, getTokenBalance, weiToEth, tokenBalanceToHuman } from '~/api/etherscan.api'
+import { getTokenBalancesWithUsd } from '~/api/rpc'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {
@@ -58,6 +70,7 @@ interface TokenBalance {
   decimals?: number
   rawBalance?: string
   formattedBalance: string
+  usdValue?: number
   loading?: boolean
 }
 
@@ -66,11 +79,34 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const initialLoading = ref<boolean>(true)
+const refreshing = ref<boolean>(false)
 const error = ref<string>('')
 const tokenBalances = ref<TokenBalance[]>([])
 const pendingFetches = ref<number>(0)
 
 const hasPendingFetches = computed<boolean>(() => pendingFetches.value > 0)
+
+const totalUsdValue = computed<number>(() => {
+  return tokenBalances.value.reduce((total, token) => {
+    if (token.usdValue && !token.loading) {
+      return total + token.usdValue
+    }
+    return total
+  }, 0)
+})
+
+const formatUsd = (value: number): string => {
+  if (value >= 1000) {
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+  if (value >= 1) {
+    return value.toFixed(2)
+  }
+  if (value >= 0.01) {
+    return value.toFixed(4)
+  }
+  return value.toFixed(6)
+}
 
 const getTokenIcon = (symbol: string): string => {
   const icons: Record<string, string> = {
@@ -89,7 +125,6 @@ const addOrUpdateBalance = (balance: TokenBalance): void => {
   } else {
     tokenBalances.value.push(balance)
   }
-  // Sort to keep ETH first, then alphabetically by symbol
   tokenBalances.value.sort((a, b) => {
     if (a.symbol === 'ETH') return -1
     if (b.symbol === 'ETH') return 1
@@ -97,114 +132,73 @@ const addOrUpdateBalance = (balance: TokenBalance): void => {
   })
 }
 
-const fetchEthBalance = async (): Promise<void> => {
+const fetchAllBalances = async (): Promise<void> => {
   pendingFetches.value++
 
-  // Add ETH placeholder with loading state
-  addOrUpdateBalance({
-    symbol: 'ETH',
-    name: 'Ethereum',
-    formattedBalance: 'Loading...',
-    loading: true
-  })
+  const symbols = Object.keys(TOKEN_INFO) as Array<keyof typeof TOKEN_INFO>
 
-  try {
-    const ethWei = await getETHBalance(props.walletAddress, props.chainId)
-    const ethBalance = weiToEth(ethWei)
-    const balanceNum = parseFloat(ethBalance)
-
+  for (const symbol of symbols) {
+    const tokenInfo = TOKEN_INFO[symbol]
     addOrUpdateBalance({
-      symbol: 'ETH',
-      name: 'Ethereum',
-      formattedBalance: balanceNum === 0 ? '0.0000 ETH' : `${balanceNum.toFixed(4)} ETH`,
-      loading: false
+      symbol: tokenInfo.symbol,
+      name: tokenInfo.name,
+      contractAddress: tokenInfo.contractAddress,
+      decimals: tokenInfo.decimals,
+      formattedBalance: 'Loading...',
+      loading: true
     })
-  } catch {
-    addOrUpdateBalance({
-      symbol: 'ETH',
-      name: 'Ethereum',
-      formattedBalance: 'Failed to load',
-      loading: false
-    })
-    console.error('Failed to fetch ETH balance')
-  } finally {
-    pendingFetches.value--
   }
-}
-
-const fetchTokenBalance = async (symbol: string, contractAddress: string): Promise<void> => {
-  pendingFetches.value++
-  const tokenInfo = TOKEN_INFO[symbol as keyof typeof TOKEN_INFO]
-
-  // Add token placeholder with loading state
-  addOrUpdateBalance({
-    symbol: tokenInfo.symbol,
-    name: tokenInfo.name,
-    contractAddress,
-    decimals: tokenInfo.decimals,
-    formattedBalance: 'Loading...',
-    loading: true
-  })
 
   try {
-    const rawBalance = await getTokenBalance(props.walletAddress, contractAddress, props.chainId)
-    const humanBalance = tokenBalanceToHuman(rawBalance, tokenInfo.decimals)
-    const balanceNum = parseFloat(humanBalance)
+    const balances = await getTokenBalancesWithUsd(props.walletAddress, symbols)
 
-    if (balanceNum >= 0) {
-      addOrUpdateBalance({
-        symbol: tokenInfo.symbol,
-        name: tokenInfo.name,
-        contractAddress,
-        decimals: tokenInfo.decimals,
-        rawBalance,
-        formattedBalance: `${balanceNum.toFixed(4)} ${tokenInfo.symbol}`,
-        loading: false
-      })
-    } else {
-      /*
-      // Remove token if balance is zero (don't show zero balances)
-      const index = tokenBalances.value.findIndex(t => t.symbol === symbol)
-      if (index !== -1) {
-        tokenBalances.value.splice(index, 1)
+    for (const symbol of symbols) {
+      const balanceData = balances[symbol as string]
+      const tokenInfo = TOKEN_INFO[symbol]
+
+      if (balanceData && parseFloat(balanceData.formatted) > 0) {
+        addOrUpdateBalance({
+          symbol: tokenInfo.symbol,
+          name: tokenInfo.name,
+          contractAddress: tokenInfo.contractAddress,
+          decimals: tokenInfo.decimals,
+          rawBalance: balanceData.raw,
+          formattedBalance: `${parseFloat(balanceData.formatted).toFixed(4)} ${tokenInfo.symbol}`,
+          usdValue: balanceData.usdValue,
+          loading: false
+        })
+      } else {
+        const index = tokenBalances.value.findIndex(t => t.symbol === symbol)
+        if (index !== -1) {
+          tokenBalances.value.splice(index, 1)
+        }
       }
-      */
     }
-  } catch {
-    // Remove token on error (don't show failed fetches)
-    const index = tokenBalances.value.findIndex(t => t.symbol === symbol)
-    if (index !== -1) {
-      tokenBalances.value.splice(index, 1)
+
+    if (tokenBalances.value.length === 0) {
+      error.value = 'No token balances found for this address'
     }
-    console.error(`Failed to fetch ${symbol} balance`)
+  } catch (err) {
+    console.error('Failed to fetch balances:', err)
+    error.value = 'Failed to load wallet balances. Please try again.'
+    tokenBalances.value = []
   } finally {
     pendingFetches.value--
   }
 }
 
 const refreshBalances = async (): Promise<void> => {
+  if (refreshing.value) return
+
+  refreshing.value = true
   error.value = ''
-  initialLoading.value = true
   tokenBalances.value = []
   pendingFetches.value = 0
 
   try {
-    const fetchPromises = []
-    fetchPromises.push(fetchEthBalance())
-    for (const [symbol, { contractAddress }] of Object.entries(TOKEN_INFO)) {
-      fetchPromises.push(fetchTokenBalance(symbol, contractAddress))
-    }
-
-    await Promise.allSettled(fetchPromises)
-
-    if (tokenBalances.value.length === 0) {
-      error.value = 'No token balances found for this address'
-    }
-  } catch (err) {
-    if (tokenBalances.value.length === 0) {
-      error.value = 'Failed to load wallet balances. Please try again.'
-    }
+    await fetchAllBalances()
   } finally {
+    refreshing.value = false
     initialLoading.value = false
   }
 }
@@ -221,6 +215,42 @@ defineExpose({
 <style scoped>
 .wallet-balance {
   width: 100%;
+  position: relative;
+}
+
+.balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.total-usd {
+  background: linear-gradient(135deg, var(--color-accent60), var(--color-accent80));
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: var(--border-thickness) solid var(--color-accent80);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+}
+
+.total-label {
+  display: block;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.total-amount {
+  display: block;
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
 }
 
 .loading-spinner-small {
@@ -264,23 +294,29 @@ defineExpose({
 }
 
 .button-refresh {
-  position: absolute;
-  right: 1.5rem;
-  top: 1.5rem;
-  padding: 0.25rem;
+  padding: 0.5rem;
   background-color: var(--color-accent60);
   color: white;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.button-refresh:hover {
+.button-refresh:hover:not(:disabled) {
   background-color: var(--color-accent80);
+  transform: scale(1.05);
 }
 
-.button-refresh>* {
+.button-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-refresh svg {
   display: block;
 }
 
@@ -293,18 +329,24 @@ defineExpose({
 .balance-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  column-gap: 1rem;
+  padding: 0.75rem;
   background-color: var(--color20);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   border: var(--border-thickness) solid var(--color40);
   animation: fadeIn 0.3s ease-in;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.balance-card:hover {
+  transform: translateX(0.25rem);
+  border-color: var(--color-accent60);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-0.625rem);
   }
 
   to {
@@ -366,13 +408,24 @@ defineExpose({
   text-align: right;
 }
 
+.amount-wrapper {
+  margin-bottom: 0.25rem;
+}
+
 .amount {
-  display: block;
+  display: inline-block;
   font-family: var(--mono);
   font-size: 1rem;
   font-weight: 600;
   color: var(--color90);
-  margin-bottom: 0.25rem;
+}
+
+.usd-value {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--color-accent80);
+  font-weight: 500;
 }
 
 .loading-indicator {
@@ -380,6 +433,7 @@ defineExpose({
   font-family: var(--mono);
   font-size: 0.875rem;
   color: var(--color60);
+  margin-left: 0.5rem;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -402,7 +456,7 @@ defineExpose({
   gap: 0.75rem;
   padding: 1rem;
   background-color: var(--color20);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   border: var(--border-thickness) solid var(--color40);
 }
 
@@ -410,7 +464,7 @@ defineExpose({
   text-align: center;
   padding: 2rem;
   background-color: var(--color10);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   border: var(--border-thickness) solid var(--color40);
 }
 
@@ -423,7 +477,7 @@ defineExpose({
 
 @media (max-width: 768px) {
   .balance-card {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .token-icon {
@@ -438,6 +492,14 @@ defineExpose({
 
   .amount {
     font-size: 0.875rem;
+  }
+
+  .total-amount {
+    font-size: 1.125rem;
+  }
+
+  .total-usd {
+    padding: 0.5rem 1rem;
   }
 }
 </style>

@@ -135,7 +135,7 @@ const saveChanges = (): void => {
   border-color: var(--color70);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .wallet-title {
     font-size: 1.25rem;
   }
