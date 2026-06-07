@@ -65,7 +65,7 @@ onMounted(() => {
 
 .button-switch svg {
   display: block;
-  color: var(--color80);
+  color: var(--color60);
   transition: all 0.2s ease;
 }
 

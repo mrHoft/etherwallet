@@ -1,9 +1,9 @@
 <template>
   <div class="wallet-balance">
     <div class="balance-header">
-      <div class="total-usd" v-if="!initialLoading && totalUsdValue > 0">
-        <span class="total-label">Total Balance</span>
-        <span class="total-amount">${{ formatUsd(totalUsdValue) }}</span>
+      <div class="total-wrapper">
+        <h2 class="total-title">Balance</h2>
+        <span v-if="!initialLoading && totalUsdValue > 0" class="total-amount">${{ formatUsd(totalUsdValue) }}</span>
       </div>
       <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh"
         :disabled="refreshing">
@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getTokenBalancesWithUsd } from '~/api/rpc'
+import { getTokenBalancesWithUsd } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {
@@ -215,7 +215,6 @@ defineExpose({
 <style scoped>
 .wallet-balance {
   width: 100%;
-  position: relative;
 }
 
 .balance-header {
@@ -226,22 +225,18 @@ defineExpose({
   padding: 0 0.5rem;
 }
 
-.total-usd {
-  background: linear-gradient(135deg, var(--color-accent60), var(--color-accent80));
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: var(--border-thickness) solid var(--color-accent80);
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+.total-wrapper {
+  display: flex;
+  column-gap: 0.5rem;
+  align-items: baseline;
 }
 
-.total-label {
-  display: block;
-  font-family: var(--sans);
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
+.total-title {
+  font-family: var(--heading);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--color80);
+  margin: 0;
 }
 
 .total-amount {
@@ -496,10 +491,6 @@ defineExpose({
 
   .total-amount {
     font-size: 1.125rem;
-  }
-
-  .total-usd {
-    padding: 0.5rem 1rem;
   }
 }
 </style>

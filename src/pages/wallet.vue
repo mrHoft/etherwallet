@@ -6,14 +6,15 @@
     </div>
 
     <div v-else-if="walletData" class="wallet-content">
-      <WalletName :wallet-name="walletData.name" @change="handleWalletNameChange" />
+      <section class="section">
+        <WalletName :wallet-name="walletData.name" @change="handleWalletNameChange" />
+      </section>
 
-      <section class="funds-section">
-        <h2 class="section-title">Balance</h2>
+      <section class="section">
         <WalletBalance :wallet-address="walletAddress" />
       </section>
 
-      <section class="dangerous-section">
+      <section class="section">
         <h2 class="section-title">Danger Zone</h2>
         <CheckWallet :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
           @decrypt-error="handleError" />
@@ -169,15 +170,7 @@ onMounted(() => {
   margin: 0 0 1rem 0;
 }
 
-.funds-section {
-  position: relative;
-  background-color: var(--color10);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  border: var(--border-thickness) solid var(--color40);
-}
-
-.dangerous-section {
+.section {
   background-color: var(--color10);
   border-radius: 0.5rem;
   padding: 1rem;
