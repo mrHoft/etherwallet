@@ -1,5 +1,14 @@
 import { ethers } from 'ethers';
-import { RPC_URLS, TOKEN_INFO, ERC20_ABI, CHAINLINK_AGGREGATOR_ABI, MAX_PRICE_AGE_SECONDS } from './const';
+import { RPC_URLS, TOKEN_INFO, MAX_PRICE_AGE_SECONDS } from './const';
+
+export const ERC20_ABI = [
+  'function balanceOf(address owner) view returns (uint256)'
+];
+
+export const CHAINLINK_AGGREGATOR_ABI = [
+  'function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
+  'function decimals() external view returns (uint8)'
+];
 
 export type TFormattedBalance = {
   raw: string;

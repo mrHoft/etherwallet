@@ -11,14 +11,4 @@ export const RPC_URLS = [
   // 'https://mainnet.gateway.tenderly.co',
 ]
 
-// ERC20 ABI (minimal for balanceOf)
-export const ERC20_ABI = [
-  'function balanceOf(address owner) view returns (uint256)'
-];
-
-export const CHAINLINK_AGGREGATOR_ABI = [
-  'function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
-  'function decimals() external view returns (uint8)'
-];
-
 export const MAX_PRICE_AGE_SECONDS = 3600 * 4;

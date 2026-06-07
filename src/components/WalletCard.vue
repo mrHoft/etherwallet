@@ -29,11 +29,11 @@
 import { onMounted, ref } from 'vue'
 import CopyIcon from '~/components/CopyIcon.vue'
 import { useNavigation } from '~/composables/useNavigation'
-import { getPortfolioValue } from '~/api/rpc';
+import { getPortfolioValue } from '~/api/multicall3';
 import { TOKEN_INFO } from '~/api/const';
 
 const { navigateTo } = useNavigation()
-const balanceTotal = ref<string>('')
+const balanceTotal = ref<string>('$--.--')
 const props = defineProps<{ walletName: string, address: string }>()
 
 const emit = defineEmits<{ showQr: [address: string] }>()
