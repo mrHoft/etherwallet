@@ -3,7 +3,7 @@
     <div class="card-header">
       <div>
         <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
-        <div>{{ balanceTotal }}</div>
+        <CardBalance :address="address" />
       </div>
       <div class="qr-placeholder" @click.stop="showQR">
         <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -26,14 +26,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
 import CopyIcon from '~/components/CopyIcon.vue'
+import CardBalance from '~/components/CardBalance.vue';
 import { useNavigation } from '~/composables/useNavigation'
-import { getPortfolioValue } from '~/api/multicall3';
-import { TOKEN_INFO } from '~/api/const';
 
 const { navigateTo } = useNavigation()
-const balanceTotal = ref<string>('$--.--')
 const props = defineProps<{ walletName: string, address: string }>()
 
 const emit = defineEmits<{ showQr: [address: string] }>()
@@ -53,13 +50,6 @@ const formatAddress = (address: string): string => {
   const last8 = address.slice(-8)
   return `... ${last8.slice(0, 4)} ${last8.slice(4, 8)}`
 }
-
-onMounted(() => {
-  getPortfolioValue(props.address, Object.keys(TOKEN_INFO)).then(data => {
-    balanceTotal.value = `$${data.totalUsdValue.toFixed(2)}`
-  }
-  )
-})
 </script>
 
 <style scoped>
@@ -124,23 +114,22 @@ onMounted(() => {
 
 .address-section {
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
 }
 
 .address-value {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  column-gap: 0.5rem;
 }
 
 .address-hash {
-  font-family: 'Courier New', 'SF Mono', monospace;
+  font-family: var(--mono);
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color80);
-  letter-spacing: 0.5px;
 }
 
 .qr-placeholder {

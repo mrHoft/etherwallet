@@ -1,8 +1,7 @@
 <template>
-  <div class="copy-icon-wrapper">
-    <svg @click.stop="handleCopy" :class="['copy-icon', { 'copy-success': isSuccess }]"
-      xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <div :class="['copy-icon', { 'copy-success': isSuccess }]" @click.stop="handleCopy">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
     </svg>
@@ -46,20 +45,21 @@ const handleCopy = async () => {
 </script>
 
 <style scoped>
-.copy-icon-wrapper {
+.copy-icon {
   position: relative;
   display: inline-flex;
   align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: calc(0.25rem + 2px);
 }
 
-.copy-icon {
-  cursor: pointer;
+.copy-icon svg {
   color: var(--color60);
   transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
-.copy-icon:hover {
+.copy-icon:hover svg {
   color: var(--color-accent60);
   transform: scale(1.1);
 }
