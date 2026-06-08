@@ -21,24 +21,27 @@
     </div>
 
     <div v-else class="balances-container">
-      <div v-for="token in tokenBalances" :key="token.symbol" class="balance-card"
-        :class="`${token.symbol.toLowerCase()}-card`">
-        <div class="token-icon" :class="token.symbol.toLowerCase()">
-          {{ getTokenIcon(token.symbol) }}
-        </div>
-        <div class="balance-info">
-          <h3 class="token-name">{{ token.name }}</h3>
-          <p class="token-symbol">{{ token.symbol }}</p>
-        </div>
-        <div class="balance-amount">
-          <div class="amount-wrapper">
-            <span class="amount">{{ token.formattedBalance }}</span>
-            <span v-if="token.loading" class="loading-indicator">...</span>
+      <div v-for="token in tokenBalances" :key="token.symbol">
+        <div class="balance-card" :class="`${token.symbol.toLowerCase()}-card`"
+          @click.stop="handleShowHistory(token.symbol)">
+          <div class="token-icon" :class="token.symbol.toLowerCase()">
+            {{ getTokenIcon(token.symbol) }}
           </div>
-          <span v-if="token.usdValue !== undefined && !token.loading" class="usd-value">
-            ${{ formatUsd(token.usdValue) }}
-          </span>
+          <div class="balance-info">
+            <h3 class="token-name">{{ token.name }}</h3>
+            <p class="token-symbol">{{ token.symbol }}</p>
+          </div>
+          <div class="balance-amount">
+            <div class="amount-wrapper">
+              <span class="amount">{{ token.formattedBalance }}</span>
+              <span v-if="token.loading" class="loading-indicator">...</span>
+            </div>
+            <span v-if="token.usdValue !== undefined && !token.loading" class="usd-value">
+              ${{ formatUsd(token.usdValue) }}
+            </span>
+          </div>
         </div>
+        <TransactionsHistory v-if="showHistoryFor === token.symbol" :address="address" :symbol="token.symbol" />
       </div>
 
       <div v-if="tokenBalances.length === 0 && !initialLoading" class="no-tokens">
@@ -55,11 +58,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import TransactionsHistory from './TransactionsHistory.vue'
 import { getTokenBalancesWithUsd } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {
-  walletAddress: string
+  address: string
   chainId?: number
 }
 
@@ -83,8 +87,12 @@ const refreshing = ref<boolean>(false)
 const error = ref<string>('')
 const tokenBalances = ref<TokenBalance[]>([])
 const pendingFetches = ref<number>(0)
-
+const showHistoryFor = ref<string>('')
 const hasPendingFetches = computed<boolean>(() => pendingFetches.value > 0)
+
+const handleShowHistory = (symbol: string) => {
+  showHistoryFor.value = showHistoryFor.value === symbol ? '' : symbol
+}
 
 const totalUsdValue = computed<number>(() => {
   return tokenBalances.value.reduce((total, token) => {
@@ -150,7 +158,7 @@ const fetchAllBalances = async (): Promise<void> => {
   }
 
   try {
-    const balances = await getTokenBalancesWithUsd(props.walletAddress, symbols)
+    const balances = await getTokenBalancesWithUsd(props.address, symbols)
 
     for (const symbol of symbols) {
       const balanceData = balances[symbol as string]
@@ -330,11 +338,10 @@ defineExpose({
   border-radius: 0.75rem;
   border: var(--border-thickness) solid var(--color40);
   animation: fadeIn 0.3s ease-in;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .balance-card:hover {
-  transform: translateX(0.25rem);
   border-color: var(--color-accent60);
 }
 

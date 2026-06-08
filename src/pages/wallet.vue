@@ -11,7 +11,7 @@
       </section>
 
       <section class="section">
-        <WalletBalance :wallet-address="walletAddress" />
+        <WalletBalance :address="walletAddress" />
       </section>
 
       <section class="section">

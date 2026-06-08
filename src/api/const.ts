@@ -13,8 +13,6 @@ export const RPC_URLS = [
 
 export const MAX_PRICE_AGE_SECONDS = 3600 * 4;
 
-// Multicall3 address (same on all chains)
 export const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11';
 
-// Cache configuration
 export const PRICE_CACHE_DURATION_MS = MAX_PRICE_AGE_SECONDS * 1000;

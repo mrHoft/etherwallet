@@ -1,13 +1,8 @@
 import { ethers } from 'ethers';
-import {
-  RPC_URLS,
-  TOKEN_INFO,
-  MAX_PRICE_AGE_SECONDS,
-  MULTICALL3_ADDRESS,
-  PRICE_CACHE_DURATION_MS
-} from './const';
+import { TOKEN_INFO, MAX_PRICE_AGE_SECONDS, MULTICALL3_ADDRESS, PRICE_CACHE_DURATION_MS } from './const';
+import { fallbackProvider } from './provider';
 
-export type TFormattedBalance = {
+interface FormattedBalance {
   raw: string;
   formatted: string;
   decimals: number;
@@ -17,19 +12,6 @@ export type TFormattedBalance = {
   isPriceStale?: boolean;
 };
 
-// ABIs
-const MULTICALL3_ABI = [
-  'function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) public view returns (tuple(bool success, bytes returnData)[])',
-  'function getEthBalance(address addr) public view returns (uint256 balance)'
-];
-
-const erc20Interface = new ethers.Interface(['function balanceOf(address) view returns (uint256)']);
-const chainlinkInterface = new ethers.Interface([
-  'function latestRoundData() view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
-  'function decimals() view returns (uint8)'
-]);
-
-// Types for internal use
 interface CallRequest {
   target: string;
   allowFailure: boolean;
@@ -58,16 +40,17 @@ interface PriceData {
   decimals: number;
 }
 
-// Cache for price feeds
+const MULTICALL3_ABI = [
+  'function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) public view returns (tuple(bool success, bytes returnData)[])',
+  'function getEthBalance(address addr) public view returns (uint256 balance)'
+];
+const erc20Interface = new ethers.Interface(['function balanceOf(address) view returns (uint256)']);
+const chainlinkInterface = new ethers.Interface([
+  'function latestRoundData() view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
+  'function decimals() view returns (uint8)'
+]);
 const priceFeedCache = new Map<string, CachedPriceData>();
-
-// Singleton provider instance
-let cachedProvider: ethers.FallbackProvider | null = null;
-
-// Pre-computed token info map for faster lookups
 const tokenInfoMap = new Map(Object.entries(TOKEN_INFO));
-
-// Pre-computed decimals as BigInt for common values
 const DECIMALS_CACHE = new Map<number, bigint>();
 
 function getDecimalsBigInt(decimals: number): bigint {
@@ -77,40 +60,6 @@ function getDecimalsBigInt(decimals: number): bigint {
   return DECIMALS_CACHE.get(decimals)!;
 }
 
-/**
- * Get or create singleton provider instance
- */
-function getProvider(): ethers.FallbackProvider {
-  if (!cachedProvider) {
-    const providers = RPC_URLS.map(url => new ethers.JsonRpcProvider(url, 1));
-    cachedProvider = new ethers.FallbackProvider(providers, 1);
-  }
-  return cachedProvider;
-}
-
-/**
- * Reset provider (useful for error recovery)
- */
-export function resetProvider(): void {
-  cachedProvider = null;
-}
-
-/**
- * Check if provider is healthy
- */
-async function ensureProviderHealthy(): Promise<void> {
-  const provider = getProvider();
-  try {
-    await provider.getBlockNumber();
-  } catch (error) {
-    cachedProvider = null;
-    throw new Error(`Provider is unhealthy: ${error}`);
-  }
-}
-
-/**
- * Validate symbols and throw early if invalid
- */
 function validateSymbols(symbols: Array<keyof typeof TOKEN_INFO>): void {
   const missingTokens = symbols.filter(s => !TOKEN_INFO[s]);
   if (missingTokens.length) {
@@ -123,32 +72,17 @@ function validateSymbols(symbols: Array<keyof typeof TOKEN_INFO>): void {
   }
 }
 
-/**
- * Separate ETH from ERC20 tokens
- */
-function separateTokens(symbols: Array<keyof typeof TOKEN_INFO>): {
-  ethSymbol: keyof typeof TOKEN_INFO | null;
-  erc20Symbols: Array<keyof typeof TOKEN_INFO>;
-} {
+function separateTokens(symbols: Array<keyof typeof TOKEN_INFO>): { ethSymbol: keyof typeof TOKEN_INFO | null; erc20Symbols: Array<keyof typeof TOKEN_INFO> } {
   const ethSymbol = symbols.find(s => TOKEN_INFO[s].contractAddress === '0x0000000000000000000000000000000000000000') || null;
   const erc20Symbols = symbols.filter(s => TOKEN_INFO[s].contractAddress !== '0x0000000000000000000000000000000000000000');
   return { ethSymbol, erc20Symbols };
 }
 
-/**
- * Get unique Chainlink feed addresses
- */
 function getUniqueFeeds(symbols: Array<keyof typeof TOKEN_INFO>): string[] {
   return [...new Set(symbols.map(s => TOKEN_INFO[s].chainlinkFeed))];
 }
 
-/**
- * Get cached price feeds
- */
-function getCachedFeeds(feedAddresses: string[]): {
-  cachedFeeds: Map<string, CachedPriceData>;
-  feedsToFetch: string[];
-} {
+function getCachedFeeds(feedAddresses: string[]): { cachedFeeds: Map<string, CachedPriceData>; feedsToFetch: string[] } {
   const cachedFeeds = new Map<string, CachedPriceData>();
   const feedsToFetch: string[] = [];
   const now = Date.now();
@@ -165,14 +99,7 @@ function getCachedFeeds(feedAddresses: string[]): {
   return { cachedFeeds, feedsToFetch };
 }
 
-/**
- * Prepare multicall requests for balances and uncached price feeds
- */
-function prepareMulticallCalls(
-  address: string,
-  erc20Symbols: Array<keyof typeof TOKEN_INFO>,
-  feedsToFetch: string[]
-): { calls: CallRequest[]; metadata: CallMetadata[] } {
+function prepareMulticallCalls(address: string, erc20Symbols: Array<keyof typeof TOKEN_INFO>, feedsToFetch: string[]): { calls: CallRequest[]; metadata: CallMetadata[] } {
   const calls: CallRequest[] = [];
   const metadata: CallMetadata[] = [];
 
@@ -209,15 +136,7 @@ function prepareMulticallCalls(
   return { calls, metadata };
 }
 
-/**
- * Parse balance results from multicall
- */
-function parseBalances(
-  results: readonly { success: boolean; returnData: string }[],
-  metadata: CallMetadata[],
-  ethSymbol: keyof typeof TOKEN_INFO | null,
-  ethBalance: bigint
-): Map<string, bigint> {
+function parseBalances(results: readonly { success: boolean; returnData: string }[], metadata: CallMetadata[], ethSymbol: keyof typeof TOKEN_INFO | null, ethBalance: bigint): Map<string, bigint> {
   const balances = new Map<string, bigint>();
 
   for (let i = 0; i < results.length; i++) {
@@ -237,7 +156,6 @@ function parseBalances(
     }
   }
 
-  // Add ETH balance if applicable
   if (ethSymbol) {
     balances.set(ethSymbol, ethBalance);
   }
@@ -245,14 +163,7 @@ function parseBalances(
   return balances;
 }
 
-/**
- * Parse price data from multicall results and cache
- */
-function parsePriceData(
-  results: readonly { success: boolean; returnData: string }[],
-  metadata: CallMetadata[],
-  cachedFeeds: Map<string, CachedPriceData>
-): Map<string, PriceData> {
+function parsePriceData(results: readonly { success: boolean; returnData: string }[], metadata: CallMetadata[], cachedFeeds: Map<string, CachedPriceData>): Map<string, PriceData> {
   const priceDataMap = new Map<string, PriceData>();
   const decimalsMap = new Map<string, number>();
 
@@ -325,15 +236,8 @@ function parsePriceData(
   return priceDataMap;
 }
 
-/**
- * Build final result with formatted balances and USD values
- */
-function buildResult(
-  symbols: Array<keyof typeof TOKEN_INFO>,
-  balances: Map<string, bigint>,
-  priceDataMap: Map<string, PriceData>
-): Record<string, TFormattedBalance> {
-  const result: Record<string, TFormattedBalance> = {};
+function buildResult(symbols: Array<keyof typeof TOKEN_INFO>, balances: Map<string, bigint>, priceDataMap: Map<string, PriceData>): Record<string, FormattedBalance> {
+  const result: Record<string, FormattedBalance> = {};
   const currentBlockTime = Math.floor(Date.now() / 1000);
 
   for (const symbol of symbols) {
@@ -390,23 +294,12 @@ function buildResult(
   return result;
 }
 
-/**
- * Get token balances and USD prices using Multicall3 with optimizations
- */
-export async function getTokenBalancesWithUsd(
-  address: string,
-  symbols: Array<keyof typeof TOKEN_INFO>
-): Promise<Record<string, TFormattedBalance>> {
-  // Deduplicate symbols
+export async function getTokenBalancesWithUsd(address: string, symbols: Array<keyof typeof TOKEN_INFO>): Promise<Record<string, FormattedBalance>> {
   const uniqueSymbols = [...new Set(symbols)];
-
-  // Early validation
   validateSymbols(uniqueSymbols);
 
-  // Ensure provider is healthy
-  await ensureProviderHealthy();
-
-  const provider = getProvider();
+  await fallbackProvider.ensureProviderHealthy();
+  const provider = fallbackProvider.getProvider();
   const multicall = new ethers.Contract(MULTICALL3_ADDRESS, MULTICALL3_ABI, provider);
 
   // Separate tokens and get unique feeds
@@ -433,13 +326,7 @@ export async function getTokenBalancesWithUsd(
   return buildResult(uniqueSymbols, balances, priceData);
 }
 
-/**
- * Get portfolio value with total USD sum
- */
-export async function getPortfolioValue(
-  address: string,
-  symbols: Array<keyof typeof TOKEN_INFO>
-): Promise<{ balances: Record<string, TFormattedBalance>; totalUsdValue: number }> {
+export async function getPortfolioValue(address: string, symbols: Array<keyof typeof TOKEN_INFO>): Promise<{ balances: Record<string, FormattedBalance>; totalUsdValue: number }> {
   const balances = await getTokenBalancesWithUsd(address, symbols);
 
   let totalUsdValue = 0;
@@ -452,18 +339,12 @@ export async function getPortfolioValue(
   return { balances, totalUsdValue };
 }
 
-/**
- * Batch multiple addresses in a single multicall
- */
-export async function getMultipleAddressesBalances(
-  addresses: string[],
-  symbols: Array<keyof typeof TOKEN_INFO>
-): Promise<Map<string, Record<string, TFormattedBalance>>> {
+export async function getMultipleAddressesBalances(addresses: string[], symbols: Array<keyof typeof TOKEN_INFO>): Promise<Map<string, Record<string, FormattedBalance>>> {
   const uniqueSymbols = [...new Set(symbols)];
   validateSymbols(uniqueSymbols);
-  await ensureProviderHealthy();
+  await fallbackProvider.ensureProviderHealthy();
 
-  const provider = getProvider();
+  const provider = fallbackProvider.getProvider();
   const multicall = new ethers.Contract(MULTICALL3_ADDRESS, MULTICALL3_ABI, provider);
 
   const { ethSymbol, erc20Symbols } = separateTokens(uniqueSymbols);
@@ -494,7 +375,7 @@ export async function getMultipleAddressesBalances(
   );
 
   // Parse results per address
-  const results = new Map<string, Record<string, TFormattedBalance>>();
+  const results = new Map<string, Record<string, FormattedBalance>>();
 
   for (let i = 0; i < addresses.length; i++) {
     const { address, startIndex, endIndex } = addressMetadata[i];
@@ -516,10 +397,7 @@ export function clearPriceCache(): void {
 }
 
 export function getPriceCache(): { size: number; feeds: string[] } {
-  return {
-    size: priceFeedCache.size,
-    feeds: Array.from(priceFeedCache.keys())
-  };
+  return { size: priceFeedCache.size, feeds: Array.from(priceFeedCache.keys()) };
 }
 
 // Example usage

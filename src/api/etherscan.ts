@@ -1,10 +1,12 @@
+import { TOKEN_INFO } from './const';
+
 const API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 const BASE_URL = import.meta.env.VITE_ETHERSCAN_BASE_URL;
 
 interface RequestParams {
-  chainid: number;
   module: string;
   action: string;
+  address: string;
   [key: string]: string | number | undefined;
 }
 
@@ -70,14 +72,16 @@ class EtherscanRequestQueue {
 const requestQueue = new EtherscanRequestQueue(400);
 
 async function etherscanRequest<T>(params: RequestParams): Promise<T> {
+  const address = params.address.startsWith('0x') ? params.address : `0x${params.address}`
   const queryParams = new URLSearchParams({
     apikey: API_KEY,
-    chainid: params.chainid.toString(),
+    chainid: '1',
     module: params.module,
     action: params.action,
+    address,
     ...Object.fromEntries(
       Object.entries(params)
-        .filter(([key]) => !['chainid', 'module', 'action'].includes(key))
+        .filter(([key]) => !['module', 'action', 'address'].includes(key))
         .map(([key, value]) => [key, String(value)])
     ),
   });
@@ -110,15 +114,11 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
  * @param chainid - Chain ID (default: 1 for Ethereum mainnet)
  * @returns Balance in Wei as string
  */
-export async function getETHBalance(
-  address: string,
-  chainid: number = 1
-): Promise<string> {
+export async function getETHBalance(address: string): Promise<string> {
   const response = await requestQueue.enqueue<{ result: string }>({
-    chainid,
     module: 'account',
     action: 'balance',
-    address: `0x${address}`,
+    address,
     tag: 'latest',
   });
 
@@ -132,17 +132,15 @@ export async function getETHBalance(
  * @param chainid - Chain ID (default: 1 for Ethereum mainnet)
  * @returns Balance in USDT smallest unit (6 decimals) as string
  */
-export async function getTokenBalance(
-  address: string,
-  tokenAddress: string = '0xdAC17F958D2ee523a2206206994597C13D831ec7'/* USDT */,
-  chainid: number = 1
-): Promise<string> {
+export async function getTokenBalance(address: string, tokenSymbol: string): Promise<string> {
+  const contractaddress = TOKEN_INFO[tokenSymbol]?.contractAddress
+  if (!contractaddress) throw new Error(`Token info not found for ${tokenSymbol}`)
+
   const response = await requestQueue.enqueue<{ result: string }>({
-    chainid,
     module: 'account',
     action: 'tokenbalance',
-    contractaddress: tokenAddress,
-    address: `0x${address}`,
+    contractaddress,
+    address,
     tag: 'latest',
   });
 
@@ -181,25 +179,43 @@ export function formatBalance(balance: string, decimals: number = 4): string {
   return numBalance.toFixed(decimals);
 }
 
+export interface TransactionRecord {
+  blockNumber: string;      // numeric string
+  timeStamp: string;        // Unix timestamp as string
+  hash: string;             // transaction hash
+  nonce: string;            // numeric string
+  blockHash: string;
+  from: string;             // address
+  contractAddress: string;  // address
+  to: string;               // address
+  value: string;            // token amount (considering decimals)
+  tokenName: string;
+  tokenSymbol: string;
+  tokenDecimal: string;     // decimals as string
+  transactionIndex: string; // numeric string
+  gas: string;              // numeric string
+  gasPrice: string;         // numeric string (wei)
+  gasUsed: string;          // numeric string
+  cumulativeGasUsed: string; // numeric string
+  methodId: string;         // hex string
+  functionName: string;     // transfer | transact | execute | swap | etc
+  confirmations: string;    // numeric string
+}
 
-export async function testBalances() {
-  // Vitalik Buterin's address
-  const testAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+export async function getTokenHistory(address: string, tokenSymbol: string, offset = 10, page = 1): Promise<TransactionRecord[]> {
+  const contractaddress = TOKEN_INFO[tokenSymbol]?.contractAddress
+  if (!contractaddress) throw new Error(`Token info not found for ${tokenSymbol}`)
 
-  try {
-    // Test ETH balance on Ethereum mainnet
-    console.log(`Fetching ETH balance for: ${testAddress}`);
-    const ethWei = await getETHBalance(testAddress, 1);
-    const ethBalance = weiToEth(ethWei);
-    console.log(`✅ ETH Balance: ${parseFloat(ethBalance).toFixed(4)} ETH\n`);
+  const response = await requestQueue.enqueue<{ result: TransactionRecord[] }>({
+    module: 'account',
+    action: 'tokentx',
+    contractaddress,
+    address,
+    startblock: 25000000,
+    sort: 'desc',
+    offset,
+    page
+  });
 
-    // Test USDT balance on Ethereum mainnet
-    console.log(`Fetching USDT balance for: ${testAddress}`);
-    const usdtRaw = await getTokenBalance(testAddress, '0xdAC17F958D2ee523a2206206994597C13D831ec7', 1);
-    const usdtBalance = tokenBalanceToHuman(usdtRaw, 6);
-    console.log(`✅ USDT Balance: ${parseFloat(usdtBalance).toFixed(2)} USDT\n`);
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-  }
+  return response.result;
 }
