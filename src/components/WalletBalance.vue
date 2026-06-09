@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import TransactionsHistory from './TransactionsHistory.vue'
-import { getTokenBalancesWithUsd } from '~/api/multicall3'
+import { getTokenBalances } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {
@@ -158,7 +158,7 @@ const fetchAllBalances = async (): Promise<void> => {
   }
 
   try {
-    const balances = await getTokenBalancesWithUsd(props.address, symbols)
+    const balances = await getTokenBalances(props.address, symbols)
 
     for (const symbol of symbols) {
       const balanceData = balances[symbol as string]

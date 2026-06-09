@@ -21,6 +21,15 @@
           <h3 class="method-title">Restore Existing Wallet</h3>
           <p class="method-description">Import wallet using your recovery phrase</p>
         </button>
+
+        <button class="method-card" @click="selectMethod('add')">
+          <svg class="method-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12H4M12 4l8 8-8 8" />
+          </svg>
+          <h3 class="method-title">Add Existing Wallet</h3>
+          <p class="method-description">Import wallet using private key</p>
+        </button>
       </div>
 
       <CreateWallet v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'"
@@ -28,6 +37,9 @@
 
       <RestoreWallet v-else-if="selectedMethod === 'restore'" :show="selectedMethod === 'restore'"
         @success="handleWalletRestored" @cancel="resetSelection" />
+
+      <AddWallet v-else-if="selectedMethod === 'add'" :show="selectedMethod === 'add'" @success="handleWalletRestored"
+        @cancel="resetSelection" />
     </div>
   </div>
 </template>
@@ -36,9 +48,10 @@
 import { ref } from 'vue'
 import CreateWallet from '~/components/CreateWallet.vue'
 import RestoreWallet from '~/components/RestoreWallet.vue'
+import AddWallet from '~/components/AddWallet.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
-type SelectedMethod = 'create' | 'restore' | null
+type SelectedMethod = 'create' | 'restore' | 'add' | null
 
 const { navigateTo } = useNavigation()
 const selectedMethod = ref<SelectedMethod>(null)

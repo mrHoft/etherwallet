@@ -7,6 +7,7 @@ export const TOKEN_INFO: Record<string, { name: string, symbol: string, decimals
 
 // Ethereum Mainnet Remote Procedure Call providers
 export const RPC_URLS = [
+  // 'http://127.0.0.1:8545', // hardhat testing environment
   'https://0xrpc.io/eth',
   // 'https://mainnet.gateway.tenderly.co',
 ]

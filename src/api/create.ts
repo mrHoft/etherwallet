@@ -52,6 +52,31 @@ export async function createWalletFromMnemonic(mnemonicPhrase: string, password:
   }
 }
 
+/**
+ * Creates wallet from an existing private key
+ * @param privateKey - Existing private key (hex string with or without 0x prefix)
+ * @param password - Password for encrypting the wallet JSON
+ * @returns Wallet information including address, private key, and encrypted JSON
+ */
+export async function createWalletFromPrivateKey(privateKey: string, password: string): Promise<WalletResult> {
+  // Ensure private key has 0x prefix
+  const formattedPrivateKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`
+
+  // Create wallet from private key
+  const wallet = new ethers.Wallet(formattedPrivateKey)
+
+  // Encrypt the wallet with password
+  const encryptedJson = await wallet.encrypt(password)
+
+  return {
+    address: wallet.address,
+    privateKey: wallet.privateKey,
+    mnemonicPhrase: '', // No mnemonic phrase when creating from private key
+    derivationPath: null, // No derivation path when creating from private key
+    encryptedJson
+  }
+}
+
 export function decryptWallet(encryptedJson: string, password: string) {
   return ethers.Wallet.fromEncryptedJson(encryptedJson, password)
 }

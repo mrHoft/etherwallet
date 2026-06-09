@@ -1,13 +1,13 @@
-import { ethers } from 'ethers';
+import { FallbackProvider, JsonRpcProvider } from 'ethers';
 import { RPC_URLS } from './const';
 
 class RPCProvider {
-  private cachedProvider: ethers.FallbackProvider | null = null;
+  private cachedProvider: FallbackProvider | null = null;
 
-  public getProvider(): ethers.FallbackProvider {
+  public getProvider(): FallbackProvider {
     if (!this.cachedProvider) {
-      const providers = RPC_URLS.map(url => new ethers.JsonRpcProvider(url, 1));
-      this.cachedProvider = new ethers.FallbackProvider(providers, 1);
+      const providers = RPC_URLS.map(url => new JsonRpcProvider(url, 1));
+      this.cachedProvider = new FallbackProvider(providers, 1);
     }
     return this.cachedProvider;
   }
@@ -22,9 +22,10 @@ class RPCProvider {
       await provider.getBlockNumber();
     } catch (error) {
       this.cachedProvider = null;
-      throw new Error(`Provider is unhealthy: ${error instanceof Error ? error.message : error}`);
+      // throw new Error(`Provider is unhealthy: ${error instanceof Error ? error.message : error}`);
+      console.log(error)
     }
   }
 }
 
-export const fallbackProvider = new RPCProvider()
+export const rpcProvider = new RPCProvider()
