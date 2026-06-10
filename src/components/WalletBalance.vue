@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import TransactionsHistory from './TransactionsHistory.vue'
-import { getTokenBalances } from '~/api/multicall3'
+import { getTokenBalances } from '~/api/rpc'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {
@@ -297,11 +297,11 @@ defineExpose({
 }
 
 .button-refresh {
-  padding: 0.5rem;
+  padding: 0.25rem;
   background-color: var(--color-accent60);
   color: white;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.325rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;

@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import { RPC_URLS, TOKEN_INFO, MAX_PRICE_AGE_SECONDS } from './const';
+import { TOKEN_INFO, MAX_PRICE_AGE_SECONDS } from './const';
+import { rpcProvider } from './provider';
 
 export const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint256)'
@@ -18,11 +19,6 @@ export type TFormattedBalance = {
   tokenPriceUsd?: number;
   priceFeedDecimals?: number;
 };
-
-function createFallbackProvider() {
-  const providers = RPC_URLS.map(url => new ethers.JsonRpcProvider(url, 1));
-  return new ethers.FallbackProvider(providers, 1);
-}
 
 async function getTokenBalance(provider: ethers.FallbackProvider, address: string, tokenAddress: string): Promise<bigint> {
   if (tokenAddress === '0x0000000000000000000000000000000000000000') {
@@ -83,9 +79,7 @@ async function getChainlinkPrice(feedAddress: string, provider: ethers.FallbackP
  * @param symbols - Array of token symbols (e.g., ['ETH', 'USDT', 'USDC'])
  * @returns Object with token symbols as keys and formatted balances including USD values
  */
-export async function getTokenBalancesWithUsd(address: string, symbols: Array<keyof typeof TOKEN_INFO>): Promise<Record<string, TFormattedBalance>> {
-
-  // Validate symbols exist in TOKEN_INFO
+export async function getTokenBalances(address: string, symbols: Array<keyof typeof TOKEN_INFO>): Promise<Record<string, TFormattedBalance>> {
   for (const symbol of symbols) {
     if (!TOKEN_INFO[symbol]) {
       throw new Error(`Unknown token symbol: ${symbol}`);
@@ -95,7 +89,7 @@ export async function getTokenBalancesWithUsd(address: string, symbols: Array<ke
     }
   }
 
-  const provider = createFallbackProvider();
+  const provider = rpcProvider.getProvider();
   const result: Record<string, TFormattedBalance> = {};
 
   const balancePromises = symbols.map(async (symbol) => {
@@ -175,7 +169,7 @@ export async function getTokenBalancesWithUsd(address: string, symbols: Array<ke
 }
 
 export async function getPortfolioValue(address: string, symbols: Array<keyof typeof TOKEN_INFO>): Promise<{ balances: Record<string, TFormattedBalance>; totalUsdValue: number }> {
-  const balances = await getTokenBalancesWithUsd(address, symbols);
+  const balances = await getTokenBalances(address, symbols);
 
   let totalUsdValue = 0;
   for (const symbol of symbols) {
@@ -192,12 +186,10 @@ export async function getPortfolioValue(address: string, symbols: Array<keyof ty
 }
 
 // Usage example
-export async function example() {
-  const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-
+export async function example(address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045') {
   try {
     // Get balances with USD values
-    const balances = await getTokenBalancesWithUsd(address, ['ETH', 'WETH', 'USDT', 'USDC']);
+    const balances = await getTokenBalances(address, Object.keys(TOKEN_INFO));
 
     console.log('Balances with USD values:');
     for (const [symbol, data] of Object.entries(balances)) {
@@ -205,7 +197,7 @@ export async function example() {
     }
 
     // Get total portfolio value
-    const portfolio = await getPortfolioValue(address, ['ETH', 'WETH', 'USDT', 'USDC']);
+    const portfolio = await getPortfolioValue(address, Object.keys(TOKEN_INFO));
     console.log(`\nTotal Portfolio Value: $${portfolio.totalUsdValue.toFixed(2)}`);
   } catch (error) {
     console.error('Error fetching balances:', error);

@@ -1,13 +1,13 @@
 import { FallbackProvider, JsonRpcProvider } from 'ethers';
-import { RPC_URLS } from './const';
+import { RPC_URLS, NETWORK_ID } from './const';
 
 class RPCProvider {
   private cachedProvider: FallbackProvider | null = null;
 
   public getProvider(): FallbackProvider {
     if (!this.cachedProvider) {
-      const providers = RPC_URLS.map(url => new JsonRpcProvider(url, 1));
-      this.cachedProvider = new FallbackProvider(providers, 1);
+      const providers = RPC_URLS.map(url => new JsonRpcProvider(url, NETWORK_ID));
+      this.cachedProvider = new FallbackProvider(providers, NETWORK_ID);
     }
     return this.cachedProvider;
   }

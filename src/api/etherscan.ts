@@ -98,7 +98,7 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
     const data = await response.json();
 
     if (data.status !== '1') {
-      throw new Error(data.result || data.message || 'Etherscan API error');
+      throw new Error(data.message || data.result || 'Etherscan API error');
     }
 
     return data as T;

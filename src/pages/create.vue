@@ -32,13 +32,13 @@
         </button>
       </div>
 
-      <CreateWallet v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'"
-        @success="handleWalletCreated" @cancel="resetSelection" />
+      <CreateWallet v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'" @success="handleSuccess"
+        @cancel="resetSelection" />
 
       <RestoreWallet v-else-if="selectedMethod === 'restore'" :show="selectedMethod === 'restore'"
-        @success="handleWalletRestored" @cancel="resetSelection" />
+        @success="handleSuccess" @cancel="resetSelection" />
 
-      <AddWallet v-else-if="selectedMethod === 'add'" :show="selectedMethod === 'add'" @success="handleWalletRestored"
+      <AddWallet v-else-if="selectedMethod === 'add'" :show="selectedMethod === 'add'" @success="handleSuccess"
         @cancel="resetSelection" />
     </div>
   </div>
@@ -66,13 +66,7 @@ const resetSelection = () => {
   selectedMethod.value = null
 }
 
-const handleWalletCreated = () => {
-  setTimeout(() => {
-    navigateTo('/')
-  }, 3000)
-}
-
-const handleWalletRestored = () => {
+const handleSuccess = () => {
   setTimeout(() => {
     navigateTo('/')
   }, 3000)
