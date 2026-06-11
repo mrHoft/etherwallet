@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
+import { rpcProvider } from './provider';
 
-export async function getGasPrice(provider: ethers.Provider): Promise<bigint> {
+export async function getGasPrice(provider?: ethers.Provider): Promise<bigint> {
+  provider = provider || rpcProvider.getProvider();
   const feeData = await provider.getFeeData();
 
   if (feeData.gasPrice === null) {
@@ -10,7 +12,8 @@ export async function getGasPrice(provider: ethers.Provider): Promise<bigint> {
   return feeData.gasPrice;
 }
 
-export async function getOptimizedGasPrice(provider: ethers.Provider): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }> {
+export async function getOptimizedGasPrice(provider?: ethers.Provider): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }> {
+  provider = provider || rpcProvider.getProvider();
   const feeData = await provider.getFeeData();
 
   if (feeData.maxFeePerGas === null || feeData.maxPriorityFeePerGas === null) {

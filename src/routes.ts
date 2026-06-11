@@ -1,8 +1,9 @@
 import type { Component } from 'vue'
-import PageHome from './pages/home.vue'
-import PageCreateWallet from './pages/create.vue'
-import PageWallet from './pages/wallet.vue'
-import PageNotFound from './pages/404.vue'
+import PageHome from './pages/PageHome.vue'
+import PageCreateWallet from './pages/PageCreate.vue'
+import PageWallet from './pages/PageWallet.vue'
+import PageTransfer from './pages/PageTransfer.vue'
+import PageNotFound from './pages/Page404.vue'
 
 export interface Route {
   path: string
@@ -13,6 +14,7 @@ export const routes: Route[] = [
   { path: '/', component: PageHome },
   { path: '/wallet', component: PageWallet },
   { path: '/create', component: PageCreateWallet },
+  { path: '/transfer', component: PageTransfer },
   { path: '**', component: PageNotFound }
 ]
 

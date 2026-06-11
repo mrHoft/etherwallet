@@ -10,12 +10,11 @@ const ERC20_ABI = [
   "function name() view returns (string)"
 ];
 
-export async function transferTokens(
+export async function transferToken(
   privateKey: string,
   recipientAddress: string,
-  tokenSymbol: string, // or contract address
+  tokenSymbolOrAddress: string, // 'ETH' for native, or token symbol/contract address
   amount: number | string, // human-readable amount (e.g., "1.5" tokens)
-  provider: ethers.Provider, // Changed to ethers.Provider for flexibility (can revert to FallbackProvider if strictly needed)
   options?: {
     gasLimit?: number | string | bigint;
     waitForConfirmation?: boolean;
@@ -26,96 +25,156 @@ export async function transferTokens(
   txResponse: ethers.TransactionResponse;
   txReceipt: ethers.TransactionReceipt | null;
 }> {
-  const tokenInfo = TOKEN_INFO[tokenSymbol] || Object.values(TOKEN_INFO).find(t => t.contractAddress.toLowerCase() === tokenSymbol.toLowerCase());
-  if (!tokenInfo) throw new Error(`Token not found: ${tokenSymbol}`);
-
+  const provider = rpcProvider.getProvider();
   const wallet = new ethers.Wallet(privateKey, provider);
+  const isNativeTransfer = tokenSymbolOrAddress.toUpperCase() === 'ETH';
 
   console.log(`Using wallet: ${wallet.address}`);
-  console.log(`Sending ${amount} ${tokenInfo.symbol} to ${recipientAddress}`);
+  console.log(`Sending ${amount} ${isNativeTransfer ? 'ETH' : tokenSymbolOrAddress} to ${recipientAddress}`);
 
-  const tokenContract = new ethers.Contract(tokenInfo.contractAddress, ERC20_ABI, wallet);
-
-  const decimals = tokenInfo.decimals;
-  const rawAmount = ethers.parseUnits(amount.toString(), decimals);
   const nonce = await provider.getTransactionCount(wallet.address, 'pending');
-  const txData = tokenContract.interface.encodeFunctionData('transfer', [recipientAddress, rawAmount]);
 
   const txOptions: ethers.TransactionRequest = {
     nonce,
     from: wallet.address,
-    to: tokenInfo.contractAddress,
-    data: txData,
   };
 
+  let rawAmount: bigint;
+
+  // ==================== BRANCH A: Native ETH Transfer ====================
+  if (isNativeTransfer) {
+    // Convert ETH amount to wei
+    rawAmount = ethers.parseEther(amount.toString());
+
+    txOptions.to = recipientAddress;
+    txOptions.value = rawAmount;
+    txOptions.data = "0x"; // No data for native transfers
+
+    // Estimate gas for native ETH transfer (simpler than token transfers)
+    let gasLimit: bigint;
+    if (options?.gasLimit) {
+      gasLimit = BigInt(options.gasLimit);
+    } else {
+      // Base gas for ETH transfer is typically 21,000, but add buffer
+      const estimatedGas = 21000n; // Standard ETH transfer gas cost
+      gasLimit = (estimatedGas * 120n) / 100n; // Adds 20% buffer
+      console.log(`Estimated gas for ETH transfer: ${estimatedGas}, with buffer: ${gasLimit}`);
+    }
+    txOptions.gasLimit = gasLimit;
+
+    // ==================== BRANCH B: ERC-20 Token Transfer ====================
+  } else {
+    // Get token info (by symbol or contract address)
+    const tokenInfo = TOKEN_INFO[tokenSymbolOrAddress] ||
+      Object.values(TOKEN_INFO).find(t => t.contractAddress.toLowerCase() === tokenSymbolOrAddress.toLowerCase());
+
+    if (!tokenInfo) {
+      throw new Error(`Token not found: ${tokenSymbolOrAddress}`);
+    }
+
+    console.log(`Token: ${tokenInfo.symbol} (${tokenInfo.contractAddress})`);
+
+    const tokenContract = new ethers.Contract(tokenInfo.contractAddress, ERC20_ABI, wallet);
+    const decimals = tokenInfo.decimals;
+
+    // Convert token amount to raw units (with decimals)
+    rawAmount = ethers.parseUnits(amount.toString(), decimals);
+
+    // Encode transfer function data
+    const txData = tokenContract.interface.encodeFunctionData('transfer', [recipientAddress, rawAmount]);
+
+    txOptions.to = tokenInfo.contractAddress;
+    txOptions.value = 0n; // No ETH value for token transfers
+    txOptions.data = txData;
+
+    // Estimate gas for token transfer
+    let gasLimit: bigint;
+    if (options?.gasLimit) {
+      gasLimit = BigInt(options.gasLimit);
+    } else {
+      try {
+        // Estimate gas with the token contract's transfer method
+        const transferMethod = tokenContract.getFunction('transfer');
+        const estimatedGas = await transferMethod.estimateGas(
+          recipientAddress,
+          rawAmount,
+          { from: wallet.address }
+        );
+        gasLimit = (BigInt(estimatedGas) * 120n) / 100n; // Adds 20% buffer
+        console.log(`Estimated gas for token transfer: ${estimatedGas}, with buffer: ${gasLimit}`);
+      } catch (error) {
+        // Fallback to a reasonable default for token transfers (typically higher than ETH)
+        console.warn(`Gas estimation failed, using default:`, error);
+        const defaultGas = 100000n; // 100k gas default for token transfers
+        gasLimit = (defaultGas * 120n) / 100n;
+      }
+    }
+    txOptions.gasLimit = gasLimit;
+  }
+
+  // ==================== Common Gas Fee Setup (EIP-1559 or Legacy) ====================
   try {
     // Try to use EIP-1559 if supported
     const gasFees = await getOptimizedGasPrice(provider);
     txOptions.maxFeePerGas = gasFees.maxFeePerGas;
     txOptions.maxPriorityFeePerGas = gasFees.maxPriorityFeePerGas;
     txOptions.type = 2;
+    console.log(`Using EIP-1559: maxFeePerGas=${gasFees.maxFeePerGas}, priorityFee=${gasFees.maxPriorityFeePerGas}`);
   } catch (error) {
     // Fallback to legacy gas price
     const gasPrice = await getGasPrice(provider);
     txOptions.gasPrice = gasPrice;
+    console.log(`Using legacy gas price: ${gasPrice}`);
   }
 
-  // Set gas limit (estimate or use provided)
-  let gasLimit: bigint;
-  if (options?.gasLimit) {
-    gasLimit = BigInt(options.gasLimit);
-  } else {
-    const transferMethod = tokenContract.getFunction('transfer');
-    const estimatedGas = await transferMethod.estimateGas(
-      recipientAddress,
-      rawAmount,
-      { from: wallet.address }
-    );
+  console.log(`Amount: ${amount} ${isNativeTransfer ? 'ETH' : 'tokens'} (raw: ${rawAmount.toString()})`);
+  console.log(`Gas limit: ${txOptions.gasLimit?.toString()}`);
+  console.log(`Recipient: ${recipientAddress}`);
 
-    gasLimit = (BigInt(estimatedGas) * 120n) / 100n; // Adds 20% buffer
+  if (!isNativeTransfer) {
+    console.log(`Token contract: ${txOptions.to}`);
   }
-  txOptions.gasLimit = gasLimit;
 
-  console.log(`Gas limit: ${gasLimit.toString()}`);
-  console.log(`Raw amount: ${rawAmount.toString()}`);
-
-  // Sign and send transaction
+  // ==================== Sign and Send Transaction ====================
   console.log("Signing and sending transaction...");
   const txResponse = await wallet.sendTransaction(txOptions);
-
   console.log(`Transaction sent! Hash: ${txResponse.hash}`);
 
-  // Wait for confirmation if requested
+  // ==================== Wait for Confirmation ====================
   let txReceipt: ethers.TransactionReceipt | null = null;
   if (options?.waitForConfirmation !== false) {
     const confirmations = options?.confirmations || 1;
     console.log(`Waiting for ${confirmations} confirmation(s)...`);
     txReceipt = await txResponse.wait(confirmations);
 
-    if (!txReceipt || txReceipt.status === 0) {
-      throw new Error("Transaction failed!");
+    if (!txReceipt) {
+      throw new Error("Transaction receipt not found!");
     }
+
+    if (txReceipt.status === 0) {
+      throw new Error(`Transaction failed! Status: ${txReceipt.status}, Hash: ${txResponse.hash}`);
+    }
+
     console.log(`Transaction confirmed in block: ${txReceipt.blockNumber}`);
+    console.log(`Gas used: ${txReceipt.gasUsed.toString()}`);
   }
 
-  return { txHash: txResponse.hash, txResponse, txReceipt };
+  return {
+    txHash: txResponse.hash,
+    txResponse,
+    txReceipt
+  };
 }
 
 export async function example() {
-  const privateKey = "0x..."; // Your private key
-  const recipientAddress = "0x..."; // Recipient wallet
-  const tokenSymbol = "USDC"; // Or contract address like "0x..."
-  const amount = "10.5"; // 10.5 tokens
-
-  const provider = rpcProvider.getProvider();
+  const privateKey = "0x..."; // Sender private key
 
   try {
-    const result = await transferTokens(
+    const result = await transferToken(
       privateKey,
-      recipientAddress,
-      tokenSymbol,
-      amount,
-      provider,
+      "0xRecipientAddress...",
+      "USDC", // Or contract address like "0x..."
+      "0.5",  // 0.5 USDC,
       {
         waitForConfirmation: true,
         confirmations: 2
