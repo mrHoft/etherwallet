@@ -1,6 +1,6 @@
 <template>
-  <div class="passphrase-component" @click="focusInput">
-    <div class="passphrase-boxes">
+  <div class="password-component" @click="focusInput">
+    <div class="password-boxes">
       <div v-for="(char, index) in displayedChars" :key="index" ref="charBoxRefs"
         :class="['char-box', { focused: focusedIndex === index }]" @click.stop="setFocusAtIndex(index)">
         {{ char }}
@@ -11,7 +11,7 @@
       @input="handleInput" @keydown="handleKeydown" @focus="handleFocus" @blur="handleBlur" />
 
     <button type="button" class="visibility-toggle" @click.stop="toggleVisibility"
-      :aria-label="isVisible ? 'Hide passphrase' : 'Show passphrase'">
+      :aria-label="isVisible ? 'Hide password' : 'Show password'">
       <svg v-if="isVisible" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
         fill="currentColor">
         <path
@@ -121,6 +121,15 @@ const toggleVisibility = () => {
   isVisible.value = !isVisible.value
 }
 
+const clear = () => {
+  inputValue.value = ''
+  emit('update:modelValue', '')
+  focusedIndex.value = -1
+  if (inputRef.value) inputRef.value.value = ''
+}
+
+defineExpose({ clear, focusInput })
+
 onMounted(() => {
   if (inputValue.value.length > 0) {
     updateFocusIndex()
@@ -133,7 +142,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.passphrase-component {
+.password-component {
   position: relative;
   display: flex;
   align-items: center;
@@ -143,7 +152,7 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.passphrase-boxes {
+.password-boxes {
   display: flex;
   gap: 0.5rem;
 }
@@ -168,7 +177,6 @@ onUnmounted(() => {
 .char-box.focused {
   border-color: var(--color-accent60);
   background-color: var(--color10);
-  /* box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.2); */
 }
 
 .hidden-input {

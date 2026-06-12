@@ -37,7 +37,7 @@
 
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
-        <Password id="password" v-model="password" />
+        <Password id="password" ref="passwordRef" v-model="password" />
       </div>
 
       <div class="form-group">
@@ -77,6 +77,7 @@ const walletEntries = computed(() => {
 })
 
 const password = ref<string>('')
+const passwordRef = ref()
 const selectedWallet = ref<string>('')
 const recipientAddress = ref<string>('')
 const selectedToken = ref<string>('')
@@ -150,7 +151,10 @@ const handleSubmit = async () => {
 
     const privateKey = await decryptWalletData(encryptedJson)
 
-    if (!privateKey) return
+    if (!privateKey) {
+      passwordRef.value?.clear()
+      return
+    }
 
     if (!recipientAddress.value.trim()) {
       errorMessage.value = 'Recipient address is required'
@@ -177,7 +181,7 @@ const handleSubmit = async () => {
 
     successMessage.value = `Transfer complete! TX: ${result.txHash}`
 
-    password.value = ''
+    passwordRef.value?.clear()
     recipientAddress.value = ''
     selectedToken.value = ''
     amount.value = null
@@ -285,7 +289,7 @@ onMounted(() => {
 
 .submit-button:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .error-message {

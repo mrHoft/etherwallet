@@ -10,7 +10,7 @@
 
       <div class="password-field">
         <label for="check-password" class="password-label">Wallet Password</label>
-        <Password id="check-password" v-model="password" :max-length="6" />
+        <Password id="check-password" ref="passwordRef" v-model="password" :max-length="6" />
       </div>
 
       <div v-if="errorMessage" class="error-message-display">
@@ -69,6 +69,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const password = ref<string>('')
+const passwordRef = ref()
 const isLoading = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const isDecrypted = ref<boolean>(false)
@@ -133,7 +134,7 @@ const getAddressFromJson = (encryptedJson: string): string => {
 defineExpose({
   resetWalletState: () => {
     isDecrypted.value = false
-    password.value = ''
+    passwordRef.value?.clear()
     isLoading.value = false
     errorMessage.value = ''
     walletData.value = {
