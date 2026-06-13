@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 import { TOKEN_INFO } from './const';
 import { rpcProvider } from './provider';
-import { getGasPrice, getOptimizedGasPrice } from './gasPrice';
 
 const ERC20_ABI = [
   "function transfer(address to, uint256 amount) returns (bool)",
@@ -20,12 +19,17 @@ export async function transferToken(
     waitForConfirmation?: boolean;
     confirmations?: number;
   }
-): Promise<{
-  txHash: string;
-  txResponse: ethers.TransactionResponse;
-  txReceipt: ethers.TransactionReceipt | null;
-}> {
-  const provider = rpcProvider.getProvider();
+): Promise<{ txHash: string; txResponse: ethers.TransactionResponse; txReceipt: ethers.TransactionReceipt | null; }> {
+  if (!ethers.isAddress(recipientAddress)) {
+    throw new Error(`Invalid recipient address: ${recipientAddress}`);
+  }
+
+  const parsedAmount = parseFloat(amount.toString());
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    throw new Error(`Invalid amount: ${amount}`);
+  }
+
+  const provider = rpcProvider.getProvider(); // ethers.FallbackProvider
   const wallet = new ethers.Wallet(privateKey, provider);
   const isNativeTransfer = tokenSymbolOrAddress.toUpperCase() === 'ETH';
 
@@ -41,7 +45,7 @@ export async function transferToken(
 
   let rawAmount: bigint;
 
-  // ==================== BRANCH A: Native ETH Transfer ====================
+  // ==================== Native ETH Transfer ====================
   if (isNativeTransfer) {
     // Convert ETH amount to wei
     rawAmount = ethers.parseEther(amount.toString());
@@ -50,23 +54,23 @@ export async function transferToken(
     txOptions.value = rawAmount;
     txOptions.data = "0x"; // No data for native transfers
 
-    // Estimate gas for native ETH transfer (simpler than token transfers)
     let gasLimit: bigint;
     if (options?.gasLimit) {
-      gasLimit = BigInt(options.gasLimit);
+      try {
+        gasLimit = BigInt(options.gasLimit);
+      } catch {
+        throw new Error(`Invalid gasLimit value: ${options.gasLimit}`);
+      }
     } else {
-      // Base gas for ETH transfer is typically 21,000, but add buffer
-      const estimatedGas = 21000n; // Standard ETH transfer gas cost
-      gasLimit = (estimatedGas * 120n) / 100n; // Adds 20% buffer
+      const estimatedGas = await provider.estimateGas({ from: wallet.address, to: recipientAddress, value: rawAmount });
+      gasLimit = (estimatedGas * 120n) / 100n;
       console.log(`Estimated gas for ETH transfer: ${estimatedGas}, with buffer: ${gasLimit}`);
     }
     txOptions.gasLimit = gasLimit;
 
-    // ==================== BRANCH B: ERC-20 Token Transfer ====================
+    // ==================== ERC-20 Token Transfer ====================
   } else {
-    // Get token info (by symbol or contract address)
-    const tokenInfo = TOKEN_INFO[tokenSymbolOrAddress] ||
-      Object.values(TOKEN_INFO).find(t => t.contractAddress.toLowerCase() === tokenSymbolOrAddress.toLowerCase());
+    const tokenInfo = TOKEN_INFO[tokenSymbolOrAddress] || Object.values(TOKEN_INFO).find(t => t.contractAddress.toLowerCase() === tokenSymbolOrAddress.toLowerCase());
 
     if (!tokenInfo) {
       throw new Error(`Token not found: ${tokenSymbolOrAddress}`);
@@ -75,7 +79,15 @@ export async function transferToken(
     console.log(`Token: ${tokenInfo.symbol} (${tokenInfo.contractAddress})`);
 
     const tokenContract = new ethers.Contract(tokenInfo.contractAddress, ERC20_ABI, wallet);
-    const decimals = tokenInfo.decimals;
+
+    const decimals: number = await (async () => {
+      try {
+        return await tokenContract.decimals();
+      } catch {
+        console.warn(`Failed to fetch decimals from contract, using config value`);
+        return tokenInfo.decimals;
+      }
+    })()
 
     // Convert token amount to raw units (with decimals)
     rawAmount = ethers.parseUnits(amount.toString(), decimals);
@@ -90,21 +102,21 @@ export async function transferToken(
     // Estimate gas for token transfer
     let gasLimit: bigint;
     if (options?.gasLimit) {
-      gasLimit = BigInt(options.gasLimit);
+      try {
+        gasLimit = BigInt(options.gasLimit);
+      } catch {
+        throw new Error(`Invalid gasLimit value: ${options.gasLimit}`);
+      }
     } else {
       try {
         // Estimate gas with the token contract's transfer method
         const transferMethod = tokenContract.getFunction('transfer');
-        const estimatedGas = await transferMethod.estimateGas(
-          recipientAddress,
-          rawAmount,
-          { from: wallet.address }
-        );
+        const estimatedGas = await transferMethod.estimateGas(recipientAddress, rawAmount);
         gasLimit = (BigInt(estimatedGas) * 120n) / 100n; // Adds 20% buffer
         console.log(`Estimated gas for token transfer: ${estimatedGas}, with buffer: ${gasLimit}`);
       } catch (error) {
         // Fallback to a reasonable default for token transfers (typically higher than ETH)
-        console.warn(`Gas estimation failed, using default:`, error);
+        console.warn(`Gas estimation failed, using default:`, error instanceof Error ? error.message : error);
         const defaultGas = 100000n; // 100k gas default for token transfers
         gasLimit = (defaultGas * 120n) / 100n;
       }
@@ -113,18 +125,17 @@ export async function transferToken(
   }
 
   // ==================== Common Gas Fee Setup (EIP-1559 or Legacy) ====================
-  try {
-    // Try to use EIP-1559 if supported
-    const gasFees = await getOptimizedGasPrice(provider);
-    txOptions.maxFeePerGas = gasFees.maxFeePerGas;
-    txOptions.maxPriorityFeePerGas = gasFees.maxPriorityFeePerGas;
+  const feeData = await provider.getFeeData();
+  if (feeData.maxFeePerGas !== null && feeData.maxPriorityFeePerGas !== null) {
+    // Use EIP-1559
+    txOptions.maxFeePerGas = (feeData.maxFeePerGas * 110n) / 100n;
+    txOptions.maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas * 110n) / 100n;
     txOptions.type = 2;
-    console.log(`Using EIP-1559: maxFeePerGas=${gasFees.maxFeePerGas}, priorityFee=${gasFees.maxPriorityFeePerGas}`);
-  } catch (error) {
-    // Fallback to legacy gas price
-    const gasPrice = await getGasPrice(provider);
-    txOptions.gasPrice = gasPrice;
-    console.log(`Using legacy gas price: ${gasPrice}`);
+    console.log(`Using EIP-1559: maxFeePerGas=${feeData.maxFeePerGas}, priorityFee=${feeData.maxPriorityFeePerGas}`);
+  } else {
+    // Use legacy gas price
+    txOptions.gasPrice = feeData.gasPrice
+    console.log(`Using legacy gas price: ${feeData.gasPrice}`);
   }
 
   console.log(`Amount: ${amount} ${isNativeTransfer ? 'ETH' : 'tokens'} (raw: ${rawAmount.toString()})`);
