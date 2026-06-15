@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import TransactionsHistory from './TransactionsHistory.vue'
-import { getTokenBalances } from '~/api/rpc'
+import { getTokenBalances } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 
 interface Props {

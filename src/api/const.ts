@@ -1,4 +1,4 @@
-const environment: 'mainnet' | 'hardhat' = 'hardhat'
+const environment: 'mainnet' | 'hardhat' = import.meta.env.VITE_APP_ENV
 
 export const TOKEN_INFO: Record<string, { name: string, symbol: string, decimals: number, contractAddress: string, chainlinkFeed: string }> = {
   ETH: { name: 'Ethereum', symbol: 'ETH', decimals: 18, contractAddress: '0x0000000000000000000000000000000000000000', chainlinkFeed: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419' },

@@ -5,6 +5,15 @@ const cwd = process.cwd();
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
+  build: {
+    assetsDir: './',
+    rollupOptions: {
+      input: {
+        main: './index.html',
+      },
+    },
+  },
   plugins: [vue()],
   resolve: {
     alias: [
