@@ -12,6 +12,7 @@ export interface Route {
 
 export const routes: Route[] = [
   { path: '/', component: PageHome },
+  { path: '/etherwallet', component: PageHome },
   { path: '/wallet', component: PageWallet },
   { path: '/create', component: PageCreateWallet },
   { path: '/transfer', component: PageTransfer },
@@ -19,7 +20,7 @@ export const routes: Route[] = [
 ]
 
 export const getRouteComponent = (path: string): Component => {
-  const route = routes.find(r => r.path === path)
+  const route = routes.find(r => r.path === path || `${r.path}/` === path)
   if (route) return route.component
 
   const catchAllRoute = routes.find(r => r.path === '**')

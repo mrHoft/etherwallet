@@ -326,16 +326,16 @@ defineExpose({
 .balances-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .balance-card {
   display: flex;
   align-items: center;
   column-gap: 1rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background-color: var(--color20);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
   animation: fadeIn 0.3s ease-in;
   transition: border-color 0.2s ease;
@@ -455,10 +455,10 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background-color: var(--color20);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
 }
 
@@ -466,7 +466,7 @@ defineExpose({
   text-align: center;
   padding: 2rem;
   background-color: var(--color10);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
 }
 
@@ -478,10 +478,6 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .balance-card {
-    padding: 0.5rem;
-  }
-
   .token-icon {
     width: 2rem;
     height: 2rem;

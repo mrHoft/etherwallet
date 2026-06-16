@@ -276,7 +276,7 @@ defineExpose({
   background: var(--color20);
   border: var(--border-thickness) solid var(--color40);
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -314,7 +314,7 @@ defineExpose({
   margin: 0;
   font-weight: 500;
   font-family: var(--sans);
-  padding: 0.75rem;
+  padding: 0.5rem;
   background-color: rgba(220, 38, 38, 0.1);
   border-radius: 0.25rem;
   border-left: 0.25rem solid #ef4444;

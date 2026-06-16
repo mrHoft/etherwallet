@@ -5,7 +5,7 @@ const cwd = process.cwd();
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/',
+  base: '/etherwallet/',
   build: {
     assetsDir: './',
     rollupOptions: {

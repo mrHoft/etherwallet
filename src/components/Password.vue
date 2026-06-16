@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 interface Props {
   maxLength?: number
@@ -95,8 +95,22 @@ const handleInput = (event: Event) => {
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Backspace' && inputValue.value.length === 0) {
-    focusedIndex.value = 0
+  const target = event.target as HTMLInputElement
+  const currentValue = target.value
+
+  if (event.key === 'Backspace') {
+    if (currentValue.length === 0) {
+      event.preventDefault()
+      return
+    }
+
+    if (currentValue.length > 0) {
+      const newValue = currentValue.slice(0, -1)
+      inputValue.value = newValue
+      emit('update:modelValue', newValue)
+      target.value = newValue
+      updateFocusIndex()
+    }
   }
 }
 
@@ -129,6 +143,16 @@ const clear = () => {
 }
 
 defineExpose({ clear, focusInput })
+
+watch(() => props.modelValue, (newValue) => {
+  if (newValue !== inputValue.value) {
+    inputValue.value = newValue
+    if (inputRef.value) {
+      inputRef.value.value = newValue
+    }
+    updateFocusIndex()
+  }
+})
 
 onMounted(() => {
   if (inputValue.value.length > 0) {

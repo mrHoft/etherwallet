@@ -21,7 +21,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="cancel-button">Cancel</button>
+        <ButtonCancel @cancel="$emit('cancel')" />
         <button type="submit" class="action-button" :disabled="isLoading || !isFormValid">
           <span v-if="isLoading" class="loading-spinner"></span>
           <span v-else>Add Wallet</span>
@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
+import ButtonCancel from './ButtonCancel.vue'
 import { createWalletFromPrivateKey, type WalletResult } from '~/api/create'
 import { storage } from '~/utils/storage'
 
@@ -186,7 +187,7 @@ watch(() => showSuccess.value, (newVal) => {
 
 .form-input,
 .form-textarea {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   background: var(--color20);
   border: var(--border-thickness) solid var(--color40);
   border-radius: 0.5rem;
@@ -230,7 +231,7 @@ watch(() => showSuccess.value, (newVal) => {
   background: var(--color-accent60);
   color: white;
   border: none;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
@@ -253,24 +254,7 @@ watch(() => showSuccess.value, (newVal) => {
 
 .action-button:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cancel-button {
-  background: var(--color30);
-  color: var(--color80);
-  border: var(--border-thickness) solid var(--color40);
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-}
-
-.cancel-button:hover {
-  background: var(--color40);
-  color: var(--color90);
+  cursor: default;
 }
 
 .loading-spinner {
@@ -290,7 +274,7 @@ watch(() => showSuccess.value, (newVal) => {
 
 .success-message {
   margin-top: 1.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   background: rgba(44, 125, 160, 0.1);
   border: var(--border-thickness) solid var(--color-accent60);
   border-radius: 0.5rem;
@@ -322,7 +306,7 @@ watch(() => showSuccess.value, (newVal) => {
 
 .error-message {
   margin-top: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   background: rgba(220, 38, 38, 0.1);
   border: var(--border-thickness) solid #ef4444;
   border-radius: 0.5rem;
@@ -339,12 +323,6 @@ watch(() => showSuccess.value, (newVal) => {
 }
 
 @media (max-width: 768px) {
-
-  .action-button,
-  .cancel-button {
-    padding: 0.75rem 1.25rem;
-  }
-
   .form-actions {
     flex-direction: column;
   }

@@ -145,10 +145,6 @@ const handleSuccess = () => {
     font-size: 1.5rem;
   }
 
-  .method-card {
-    padding: 1rem;
-  }
-
   .method-title {
     font-size: 1rem;
   }

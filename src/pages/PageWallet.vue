@@ -159,7 +159,7 @@ onMounted(() => {
 .wallet-content {
   display: flex;
   flex-direction: column;
-  row-gap: 1rem;
+  row-gap: 0.5rem;
 }
 
 .section-title {
@@ -173,7 +173,7 @@ onMounted(() => {
 .section {
   background-color: var(--color10);
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
 }
 </style>

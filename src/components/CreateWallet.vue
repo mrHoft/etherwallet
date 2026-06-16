@@ -9,12 +9,12 @@
 
       <div class="form-group">
         <label class="form-label">Password</label>
-        <Password v-model="password" :max-length="6" @complete="onPassphraseComplete" />
+        <Password v-model="password" :max-length="6" @complete="handlePasswordChange" />
         <p class="form-hint">Enter a 6-character passphrase for security (minimum 3 characters)</p>
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="cancel-button">Cancel</button>
+        <ButtonCancel @cancel="$emit('cancel')" />
         <button type="submit" class="action-button" :disabled="isLoading || !isFormValid">
           <span v-if="isLoading" class="loading-spinner"></span>
           <span v-else>Create Wallet</span>
@@ -61,6 +61,7 @@
 import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
 import CopyIcon from '~/components/CopyIcon.vue'
+import ButtonCancel from './ButtonCancel.vue'
 import { createWallet, type WalletResult } from '~/api/create'
 import { storage } from '~/utils/storage'
 
@@ -95,7 +96,7 @@ const resetForm = () => {
   createdWalletName.value = ''
 }
 
-const onPassphraseComplete = (value: string) => {
+const handlePasswordChange = (value: string) => {
   password.value = value
 }
 
@@ -206,7 +207,7 @@ watch(() => props.show, (newVal) => {
   background: var(--color-accent60);
   color: white;
   border: none;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
@@ -229,24 +230,7 @@ watch(() => props.show, (newVal) => {
 
 .action-button:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cancel-button {
-  background: var(--color30);
-  color: var(--color80);
-  border: var(--border-thickness) solid var(--color40);
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-}
-
-.cancel-button:hover {
-  background: var(--color40);
-  color: var(--color90);
+  cursor: default;
 }
 
 .loading-spinner {
@@ -265,8 +249,8 @@ watch(() => props.show, (newVal) => {
 }
 
 .success-message {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin-top: 1rem;
+  padding: 0.5rem;
   background: rgba(44, 125, 160, 0.1);
   border: var(--border-thickness) solid var(--color-accent60);
   border-radius: 0.5rem;
@@ -275,7 +259,7 @@ watch(() => props.show, (newVal) => {
 .success-header {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
@@ -300,8 +284,8 @@ watch(() => props.show, (newVal) => {
   background: var(--color20);
   border: var(--border-thickness) solid var(--color40);
   border-radius: 0.5rem;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
 }
 
 .mnemonic-header {
@@ -354,12 +338,6 @@ watch(() => props.show, (newVal) => {
 }
 
 @media (max-width: 768px) {
-
-  .action-button,
-  .cancel-button {
-    padding: 0.75rem 1.25rem;
-  }
-
   .form-actions {
     flex-direction: column;
   }
@@ -368,10 +346,6 @@ watch(() => props.show, (newVal) => {
 @media (max-width: 480px) {
   .form-group {
     gap: 0.375rem;
-  }
-
-  .mnemonic-box {
-    padding: 0.75rem;
   }
 }
 </style>
