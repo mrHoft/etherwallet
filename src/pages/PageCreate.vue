@@ -56,7 +56,7 @@ type SelectedMethod = 'create' | 'restore' | 'add' | null
 const { navigateTo } = useNavigation()
 const selectedMethod = ref<SelectedMethod>(null)
 
-const isRestoring = () => selectedMethod.value === 'create'
+const isRestoring = () => selectedMethod.value === 'restore'
 
 const selectMethod = (method: SelectedMethod) => {
   selectedMethod.value = method

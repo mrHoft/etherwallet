@@ -8,6 +8,7 @@
     <div v-else-if="walletData" class="wallet-content">
       <section class="section">
         <WalletName :wallet-name="walletData.name" @change="handleWalletNameChange" />
+        <p v-if="renameError" class="rename-error">{{ renameError }}</p>
       </section>
 
       <section class="section">
@@ -26,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { storage } from '~/utils/storage'
+import { ref, onMounted } from 'vue'
+import { getWallets, removeWallet, renameWallet } from '~/utils/wallets'
 import DeleteWallet from '~/components/DeleteWallet.vue'
 import CheckWallet from '~/components/CheckWallet.vue'
 import WalletBalance from '~/components/WalletBalance.vue'
@@ -48,13 +49,9 @@ interface WalletEntry {
 }
 
 const error = ref<string>('')
+const renameError = ref<string>('')
 const walletData = ref<WalletEntry | null>(null)
 const walletAddress = ref<string>('')
-
-const walletEntries = computed<[string, string][]>(() => {
-  const state = storage.get<Record<string, string>>('wallet') || {}
-  return Object.entries(state)
-})
 
 const getAddressFromJson = (encryptedJson: string): string => {
   try {
@@ -69,7 +66,7 @@ const findWalletByAddress = (address: string): WalletEntry | null => {
   let normalizedAddress = address.toLowerCase()
   if (normalizedAddress.startsWith('0x')) normalizedAddress = normalizedAddress.slice(2)
 
-  for (const [name, encryptedJson] of walletEntries.value) {
+  for (const [name, encryptedJson] of Object.entries(getWallets())) {
     const walletAddressFromJson = getAddressFromJson(encryptedJson)
     if (walletAddressFromJson.toLowerCase() === normalizedAddress) {
       return { name, encryptedJson }
@@ -83,9 +80,7 @@ const handleDeleteSuccess = async (): Promise<void> => {
   if (!walletData.value) return
 
   try {
-    const state = storage.get<Record<string, string>>('wallet') || {}
-    delete state[walletData.value.name]
-    storage.set('wallet', state)
+    removeWallet(walletData.value.name)
     navigateTo('/')
   } catch {
     error.value = 'Failed to delete wallet from storage'
@@ -102,13 +97,14 @@ const handleDeleteCancel = (): void => {
 
 const handleWalletNameChange = (newName: string) => {
   if (!walletData.value) return
-  console.log(newName)
-  const key = newName.trim().replace(/ /g, '_')
-  const state = storage.get<Record<string, string>>('wallet') || {}
-  state[key] = state[walletData.value.name]
-  delete state[walletData.value.name]
-  storage.set('wallet', state)
-  walletData.value.name = key
+
+  try {
+    const walletName = renameWallet(walletData.value.name, newName)
+    walletData.value.name = walletName
+    renameError.value = ''
+  } catch (renameFailure) {
+    renameError.value = renameFailure instanceof Error ? renameFailure.message : 'Failed to rename wallet'
+  }
 }
 
 onMounted(() => {
@@ -175,5 +171,12 @@ onMounted(() => {
   border-radius: 0.5rem;
   padding: 0.5rem;
   border: var(--border-thickness) solid var(--color40);
+}
+
+.rename-error {
+  margin-top: 0.5rem;
+  color: #ef4444;
+  font-family: var(--sans);
+  font-size: 0.875rem;
 }
 </style>

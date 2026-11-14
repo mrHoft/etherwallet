@@ -31,6 +31,12 @@ class Storage {
     this.emit();
   }
 
+  public remove(key: string) {
+    if (!Object.prototype.hasOwnProperty.call(this._state, key)) return;
+    delete this._state[key];
+    this.emit();
+  }
+
   private emit() {
     if (typeof globalThis.window !== 'undefined') {
       const state = JSON.stringify(this._state);

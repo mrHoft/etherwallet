@@ -98,6 +98,10 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
     const data = await response.json();
 
     if (data.status !== '1') {
+      if (Array.isArray(data.result) && data.result.length === 0) {
+        return data as T;
+      }
+
       throw new Error(data.message || data.result || 'Etherscan API error');
     }
 
@@ -206,7 +210,7 @@ export async function getTokenHistory(address: string, tokenSymbol: string, offs
   const contractaddress = TOKEN_INFO[tokenSymbol]?.contractAddress
   if (!contractaddress) throw new Error(`Token info not found for ${tokenSymbol}`)
 
-  const response = await requestQueue.enqueue<{ result: TransactionRecord[] }>({
+  const response = await requestQueue.enqueue<{ result?: TransactionRecord[] }>({
     module: 'account',
     action: 'tokentx',
     contractaddress,
@@ -217,5 +221,5 @@ export async function getTokenHistory(address: string, tokenSymbol: string, offs
     page
   });
 
-  return response.result;
+  return Array.isArray(response.result) ? response.result : [];
 }

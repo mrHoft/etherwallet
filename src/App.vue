@@ -1,6 +1,8 @@
 <template>
   <Layout>
-    <component :is="currentComponent" />
+    <KeepAlive :include="['PageHome']">
+      <component :is="currentComponent" />
+    </KeepAlive>
   </Layout>
 </template>
 

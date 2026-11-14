@@ -3,7 +3,12 @@
     <div class="balance-header">
       <div class="total-wrapper">
         <h2 class="total-title">Balance</h2>
-        <span v-if="!initialLoading && totalUsdValue > 0" class="total-amount">${{ formatUsd(totalUsdValue) }}</span>
+        <span v-if="!initialLoading && totalUsdValue > 0" class="total-amount">
+          Total: ${{ formatUsd(totalUsdValue) }}
+          <span v-if="allTimeDelta !== null" class="total-delta" :class="allTimeDeltaClass">
+            ({{ formatDeltaUsd(allTimeDelta) }})
+          </span>
+        </span>
       </div>
       <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh"
         :disabled="refreshing">
@@ -20,7 +25,7 @@
       <p class="error-message-mini">{{ error }}</p>
     </div>
 
-    <div v-else class="balances-container">
+    <div v-if="tokenBalances.length > 0 || !error" class="balances-container">
       <div v-for="token in tokenBalances" :key="token.symbol">
         <div class="balance-card" :class="`${token.symbol.toLowerCase()}-card`"
           @click.stop="handleShowHistory(token.symbol)">
@@ -30,6 +35,10 @@
           <div class="balance-info">
             <h3 class="token-name">{{ token.name }}</h3>
             <p class="token-symbol">{{ token.symbol }}</p>
+            <p v-if="token.changeAmount" class="token-change" :class="tokenChangeClass(token.changeUsd)">
+              {{ token.changeAmount }} {{ token.symbol }}
+              <span v-if="token.changeUsd !== undefined">({{ formatDeltaUsd(token.changeUsd) }})</span>
+            </p>
           </div>
           <div class="balance-amount">
             <div class="amount-wrapper">
@@ -58,9 +67,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { formatUnits } from 'ethers'
 import TransactionsHistory from './TransactionsHistory.vue'
 import { getTokenBalances } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
+import { getStoredWalletAccount, syncAccountBalance } from '~/utils/accountBalance'
 
 interface Props {
   address: string
@@ -76,6 +87,8 @@ interface TokenBalance {
   formattedBalance: string
   usdValue?: number
   loading?: boolean
+  changeAmount?: string
+  changeUsd?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -88,6 +101,7 @@ const error = ref<string>('')
 const tokenBalances = ref<TokenBalance[]>([])
 const pendingFetches = ref<number>(0)
 const showHistoryFor = ref<string>('')
+const allTimeDelta = ref<number | null>(null)
 const hasPendingFetches = computed<boolean>(() => pendingFetches.value > 0)
 
 const handleShowHistory = (symbol: string) => {
@@ -116,12 +130,29 @@ const formatUsd = (value: number): string => {
   return value.toFixed(6)
 }
 
+const formatDeltaUsd = (value: number): string => {
+  const absoluteValue = Math.floor(Math.abs(value))
+  const sign = value < 0 ? '-' : '+'
+  return `${sign}$${absoluteValue.toLocaleString('en-US')}`
+}
+
+const allTimeDeltaClass = computed<string>(() => {
+  if (allTimeDelta.value === null || allTimeDelta.value === 0) return 'neutral'
+  return allTimeDelta.value < 0 ? 'negative' : 'positive'
+})
+
+const tokenChangeClass = (usdDelta?: number): string => {
+  if (usdDelta === undefined || usdDelta === 0) return 'neutral'
+  return usdDelta < 0 ? 'negative' : 'positive'
+}
+
 const getTokenIcon = (symbol: string): string => {
   const icons: Record<string, string> = {
     ETH: '⟠',
     USDT: '₮',
     USDC: '$',
     WETH: 'Ⓦ',
+    stETH: 'Ⓢ',
   }
   return icons[symbol] || '🪙'
 }
@@ -140,13 +171,63 @@ const addOrUpdateBalance = (balance: TokenBalance): void => {
   })
 }
 
+const seedFromStorage = (): void => {
+  const stored = getStoredWalletAccount(props.address)
+  if (!stored) return
+
+  const seeded: TokenBalance[] = []
+
+  for (const symbol of Object.keys(TOKEN_INFO)) {
+    const tokenInfo = TOKEN_INFO[symbol]
+    const storedToken = stored.tokens?.[symbol]
+    if (!storedToken) continue
+
+    let raw: bigint
+    try {
+      raw = BigInt(storedToken.raw)
+    } catch {
+      continue
+    }
+
+    if (raw <= 0n) continue
+
+    const formattedBalance = parseFloat(formatUnits(raw, tokenInfo.decimals)).toFixed(4)
+
+    seeded.push({
+      symbol: tokenInfo.symbol,
+      name: tokenInfo.name,
+      contractAddress: tokenInfo.contractAddress,
+      decimals: tokenInfo.decimals,
+      rawBalance: storedToken.raw,
+      formattedBalance: `${formattedBalance} ${tokenInfo.symbol}`,
+      usdValue: storedToken.usdValue > 0 ? storedToken.usdValue : undefined,
+      loading: false
+    })
+  }
+
+  if (seeded.length === 0) return
+
+  seeded.sort((a, b) => {
+    if (a.symbol === 'ETH') return -1
+    if (b.symbol === 'ETH') return 1
+    return a.symbol.localeCompare(b.symbol)
+  })
+
+  tokenBalances.value = seeded
+  allTimeDelta.value = stored.totalUsd - stored.accountBalance
+  initialLoading.value = false
+}
+
 const fetchAllBalances = async (): Promise<void> => {
   pendingFetches.value++
 
   const symbols = Object.keys(TOKEN_INFO) as Array<keyof typeof TOKEN_INFO>
+  const knownSymbols = new Set(tokenBalances.value.map(token => token.symbol))
 
   for (const symbol of symbols) {
     const tokenInfo = TOKEN_INFO[symbol]
+    if (knownSymbols.has(tokenInfo.symbol)) continue
+
     addOrUpdateBalance({
       symbol: tokenInfo.symbol,
       name: tokenInfo.name,
@@ -186,10 +267,29 @@ const fetchAllBalances = async (): Promise<void> => {
     if (tokenBalances.value.length === 0) {
       error.value = 'No token balances found for this address'
     }
+
+    const totalUsd = Object.values(balances).reduce(
+      (total, balance) => total + (balance?.usdValue ?? 0),
+      0
+    )
+
+    try {
+      const sync = syncAccountBalance(props.address, balances, totalUsd)
+      allTimeDelta.value = sync.allTimeDelta
+
+      for (const change of sync.changes) {
+        const token = tokenBalances.value.find(item => item.symbol === change.symbol)
+        if (!token) continue
+
+        token.changeAmount = change.amount
+        token.changeUsd = change.usdDelta
+      }
+    } catch (syncError) {
+      console.error('Failed to update account balance history:', syncError)
+    }
   } catch (err) {
     console.error('Failed to fetch balances:', err)
     error.value = 'Failed to load wallet balances. Please try again.'
-    tokenBalances.value = []
   } finally {
     pendingFetches.value--
   }
@@ -200,7 +300,6 @@ const refreshBalances = async (): Promise<void> => {
 
   refreshing.value = true
   error.value = ''
-  tokenBalances.value = []
   pendingFetches.value = 0
 
   try {
@@ -212,6 +311,7 @@ const refreshBalances = async (): Promise<void> => {
 }
 
 onMounted(() => {
+  seedFromStorage()
   refreshBalances()
 })
 
@@ -241,7 +341,7 @@ defineExpose({
 
 .total-title {
   font-family: var(--heading);
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--color80);
   margin: 0;
@@ -250,10 +350,28 @@ defineExpose({
 .total-amount {
   display: block;
   font-family: var(--mono);
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   color: white;
   line-height: 1;
+}
+
+.total-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.total-delta.positive {
+  color: var(--color-up);
+}
+
+.total-delta.negative {
+  color: var(--color-down);
+}
+
+.total-delta.neutral {
+  color: var(--color60);
 }
 
 .loading-spinner-small {
@@ -386,6 +504,10 @@ defineExpose({
   color: #627eea;
 }
 
+.token-icon.steth {
+  color: #00a3ff;
+}
+
 .balance-info {
   flex: 1;
 }
@@ -404,6 +526,25 @@ defineExpose({
   color: var(--color70);
   margin: 0;
   text-transform: uppercase;
+}
+
+.token-change {
+  margin: 0.25rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.token-change.positive {
+  color: var(--color-up);
+}
+
+.token-change.negative {
+  color: var(--color-down);
+}
+
+.token-change.neutral {
+  color: var(--color60);
 }
 
 .balance-amount {
@@ -493,7 +634,7 @@ defineExpose({
   }
 
   .total-amount {
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
 }
 </style>

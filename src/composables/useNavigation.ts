@@ -1,7 +1,12 @@
+import { withBase } from '~/utils/path'
+
 export const useNavigation = () => {
   const navigateTo = (path: string) => {
-    if (window.location.pathname !== path) {
-      window.history.pushState({}, '', path)
+    const target = withBase(path)
+    const current = `${window.location.pathname}${window.location.search}`
+
+    if (current !== target) {
+      window.history.pushState({}, '', target)
       window.dispatchEvent(new PopStateEvent('popstate'))
     }
   }

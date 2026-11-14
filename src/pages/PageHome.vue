@@ -15,11 +15,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { storage } from '~/utils/storage'
+import { onActivated, ref } from 'vue'
+import { getWallets } from '~/utils/wallets'
 import WalletCard from '~/components/WalletCard.vue'
 import WalletNew from '~/components/WalletNew.vue'
 import ModalQRCode from '~/components/ModalQRCode.vue'
+
+defineOptions({ name: 'PageHome' })
 
 const modalQRRef = ref<InstanceType<typeof ModalQRCode>>()
 
@@ -46,10 +48,13 @@ const getAddressFromJson = (encryptedJson: string): string => {
   }
 }
 
-const walletEntries = computed(() => {
-  const state = storage.get<Record<string, string>>('wallet') || {}
-  return Object.entries(state)
-})
+const walletEntries = ref<[string, string][]>(Object.entries(getWallets()))
+
+const refreshWalletEntries = () => {
+  walletEntries.value = Object.entries(getWallets())
+}
+
+onActivated(refreshWalletEntries)
 </script>
 
 <style scoped>

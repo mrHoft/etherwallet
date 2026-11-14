@@ -11,7 +11,7 @@
       <div class="form-group">
         <label for="wallet-name" class="form-label">Wallet Name</label>
         <input id="wallet-name" v-model="walletName" type="text" class="form-input" placeholder="My Restored Wallet"
-          maxlength="50" required />
+          maxlength="24" required />
       </div>
 
       <div class="form-group">
@@ -58,7 +58,7 @@ import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
 import ButtonCancel from './ButtonCancel.vue'
 import { createWalletFromMnemonic, type WalletResult } from '~/api/create'
-import { storage } from '~/utils/storage'
+import { addWallet, hasWallet, normalizeWalletName, validateWalletName } from '~/utils/wallets'
 
 const props = defineProps<{ show: boolean }>()
 
@@ -114,6 +114,17 @@ const handleSubmit = async () => {
     return
   }
 
+  const validationError = validateWalletName(walletName.value)
+  if (validationError) {
+    errorMessage.value = validationError
+    return
+  }
+
+  if (hasWallet(walletName.value)) {
+    errorMessage.value = `A wallet named "${normalizeWalletName(walletName.value)}" already exists`
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
 
@@ -122,8 +133,7 @@ const handleSubmit = async () => {
     const result = await createWalletFromMnemonic(normalizedMnemonic, password.value)
     walletResult.value = result
 
-    const key = walletName.value.trim().replace(/ /g, '_')
-    storage.set(`wallet.${key}`, result.encryptedJson)
+    addWallet(walletName.value, result.encryptedJson)
 
     showSuccess.value = true
     emit('success', walletName.value.trim())

@@ -3,7 +3,7 @@
   <nav class="navigation">
     <div class="navigation__container">
       <button v-for="route in navigationRoutes" :key="route.path" class="button-nav"
-        :class="{ 'button-nav--active': currentPath === route.path }" :disabled="currentPath === route.path"
+        :class="{ 'button-nav--active': currentPath === route.fullPath }" :disabled="currentPath === route.fullPath"
         @click="navigateTo(route.path)">
         <svg class="navigation__icon" viewBox="0 0 24 24" fill="currentColor">
           <path :d="route.icon" />
@@ -24,6 +24,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useNavigation } from '~/composables/useNavigation'
+import { normalizePath, withBase } from '~/utils/path'
+
+const { navigateTo } = useNavigation()
 
 const navigationRoutes = [
   {
@@ -51,20 +55,15 @@ const navigationRoutes = [
     label: 'Settings',
     icon: 'm12,8.74c4.23-.06,4.23,6.58,0,6.52-4.23.06-4.23-6.58,0-6.52Z m8.29,0.41c-1.85,0-2.71-1.37-1.69-2.92,1.46-2.2-3.46-5.2-4.94-2.87-.99,1.57-2.25,1.48-3.37,0-1.55-2.05-6.43.42-4.92,2.88.97,1.58.18,2.91-1.68,2.91-2.69,0-2.75,5.71,0,5.71,1.85,0,2.58,1.29,1.68,2.92-1.43,2.58,3.52,5.19,4.94,2.87.97-1.58,2.32-1.53,3.37,0,1.71,2.49,6.24-.79,4.94-2.87-.98-1.58-.18-2.92,1.68-2.92,2.76,0,2.84-5.71-.01-5.71Z'
   }
-]
+].map(route => ({
+  ...route,
+  fullPath: normalizePath(withBase(route.path))
+}))
 
-const currentPath = ref(window.location.pathname)
+const currentPath = ref(normalizePath(window.location.pathname))
 
 const updateCurrentPath = () => {
-  currentPath.value = window.location.pathname
-}
-
-const navigateTo = (path: string) => {
-  if (currentPath.value !== path) {
-    window.history.pushState({}, '', path)
-    updateCurrentPath()
-    window.dispatchEvent(new PopStateEvent('popstate'))
-  }
+  currentPath.value = normalizePath(window.location.pathname)
 }
 /*
 const navigateToRandom = () => {

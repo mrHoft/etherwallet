@@ -30,8 +30,8 @@
 
         <div class="form-group form-group--half">
           <label class="form-label" for="amount">Amount</label>
-          <input id="amount" v-model.number="amount" type="number" class="form-input" placeholder="0.0000" step="0.0001"
-            min="0" required />
+          <input id="amount" v-model="amount" type="text" inputmode="decimal" class="form-input" placeholder="0.0000"
+            required />
         </div>
       </div>
 
@@ -64,28 +64,32 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { storage } from '~/utils/storage'
+import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/const'
 import Password from '~/components/Password.vue'
 import { getGasPrice } from '~/api/gasPrice'
 import { decryptWallet } from '~/api/create'
 import { transferToken } from '~/api/transfer'
 
-const walletEntries = computed(() => {
-  const state = storage.get<Record<string, string>>('wallet') || {}
-  return Object.entries(state)
-})
+const walletEntries = Object.entries(getWallets())
 
 const password = ref<string>('')
 const passwordRef = ref()
 const selectedWallet = ref<string>('')
 const recipientAddress = ref<string>('')
 const selectedToken = ref<string>('')
-const amount = ref<number | null>(null)
+const amount = ref<string>('')
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const successMessage = ref<string>('')
 const gasPrice = ref<bigint>(0n)
+
+const isAmountValid = computed<boolean>(() => {
+  const value = amount.value.trim()
+  if (!/^\d*\.?\d+$/.test(value)) return false
+  const parsedValue = Number(value)
+  return Number.isFinite(parsedValue) && parsedValue > 0
+})
 
 const isFormValid = computed<boolean>(() => {
   return (
@@ -93,8 +97,7 @@ const isFormValid = computed<boolean>(() => {
     selectedWallet.value !== '' &&
     recipientAddress.value.trim() !== '' &&
     selectedToken.value !== '' &&
-    amount.value !== null &&
-    amount.value > 0
+    isAmountValid.value
   )
 })
 
@@ -141,8 +144,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const walletMap = storage.get<Record<string, string>>('wallet') || {}
-    const encryptedJson = walletMap[selectedWallet.value]
+    const encryptedJson = getWallets()[selectedWallet.value]
 
     if (!encryptedJson) {
       errorMessage.value = 'Wallet not found'
@@ -166,8 +168,8 @@ const handleSubmit = async () => {
       return
     }
 
-    if (!amount.value || amount.value <= 0) {
-      errorMessage.value = 'Amount must be greater than 0'
+    if (!isAmountValid.value) {
+      errorMessage.value = 'Amount must be a valid number greater than 0'
       return
     }
 
@@ -175,7 +177,7 @@ const handleSubmit = async () => {
       privateKey,
       recipientAddress.value.trim(),
       selectedToken.value,
-      amount.value.toString(),
+      amount.value.trim(),
       { waitForConfirmation: true }
     )
 
@@ -184,7 +186,7 @@ const handleSubmit = async () => {
     passwordRef.value?.clear()
     recipientAddress.value = ''
     selectedToken.value = ''
-    amount.value = null
+    amount.value = ''
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Transfer failed'
   } finally {
