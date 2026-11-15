@@ -17,9 +17,9 @@
 
       <section class="section">
         <h2 class="section-title">Danger Zone</h2>
-        <CheckWallet :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
+        <WalletCheck :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
           @decrypt-error="handleError" />
-        <DeleteWallet :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
+        <WalletDelete :wallet-name="walletData.name" :encrypted-json="walletData.encryptedJson"
           @delete-success="handleDeleteSuccess" @delete-error="handleError" @cancel="handleDeleteCancel" />
       </section>
     </div>
@@ -29,11 +29,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getWallets, removeWallet, renameWallet } from '~/utils/wallets'
-import DeleteWallet from '~/components/DeleteWallet.vue'
-import CheckWallet from '~/components/CheckWallet.vue'
+import WalletDelete from '~/components/WalletDelete.vue'
+import WalletCheck from '~/components/WalletCheck.vue'
 import WalletBalance from '~/components/WalletBalance.vue'
 import WalletName from '~/components/WalletName.vue'
-import ButtonBack from '~/components/ButtonBack.vue'
+import ButtonBack from '~/components/ui/ButtonBack.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
 const { navigateTo } = useNavigation()

@@ -32,13 +32,13 @@
         </button>
       </div>
 
-      <CreateWallet v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'" @success="handleSuccess"
+      <WalletCreate v-else-if="selectedMethod === 'create'" :show="selectedMethod === 'create'" @success="handleSuccess"
         @cancel="resetSelection" />
 
-      <RestoreWallet v-else-if="selectedMethod === 'restore'" :show="selectedMethod === 'restore'"
+      <WalletRestore v-else-if="selectedMethod === 'restore'" :show="selectedMethod === 'restore'"
         @success="handleSuccess" @cancel="resetSelection" />
 
-      <AddWallet v-else-if="selectedMethod === 'add'" :show="selectedMethod === 'add'" @success="handleSuccess"
+      <WalletAdd v-else-if="selectedMethod === 'add'" :show="selectedMethod === 'add'" @success="handleSuccess"
         @cancel="resetSelection" />
     </div>
   </div>
@@ -46,9 +46,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import CreateWallet from '~/components/CreateWallet.vue'
-import RestoreWallet from '~/components/RestoreWallet.vue'
-import AddWallet from '~/components/AddWallet.vue'
+import WalletCreate from '~/components/WalletCreate.vue'
+import WalletRestore from '~/components/WalletRestore.vue'
+import WalletAdd from '~/components/WalletAdd.vue'
 import { useNavigation } from '~/composables/useNavigation'
 
 type SelectedMethod = 'create' | 'restore' | 'add' | null

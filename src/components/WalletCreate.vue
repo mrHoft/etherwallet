@@ -1,30 +1,23 @@
 <template>
-  <div class="restore-wallet">
-    <form v-if="!showSuccess" @submit.prevent="handleSubmit" class="restore-form">
-      <div class="form-group">
-        <label class="form-label">Recovery Phrase (Mnemonic)</label>
-        <textarea v-model="mnemonicPhrase" class="form-textarea"
-          placeholder="Enter your 12 or 24 word recovery phrase..." rows="4" required />
-        <p class="form-hint">Enter your seed phrase words separated by spaces</p>
-      </div>
-
+  <div class="create-wallet">
+    <form v-if="!showSuccess" @submit.prevent="handleSubmit" class="wallet-form">
       <div class="form-group">
         <label for="wallet-name" class="form-label">Wallet Name</label>
-        <input id="wallet-name" v-model="walletName" type="text" class="form-input" placeholder="My Restored Wallet"
+        <input id="wallet-name" v-model="walletName" type="text" class="form-input" placeholder="My Ethereum Wallet"
           maxlength="24" required />
       </div>
 
       <div class="form-group">
         <label class="form-label">Password</label>
         <Password v-model="password" :max-length="6" @complete="handlePasswordChange" />
-        <p class="form-hint">Enter a password to encrypt your restored wallet</p>
+        <p class="form-hint">Enter a 6-character passphrase for security (minimum 3 characters)</p>
       </div>
 
       <div class="form-actions">
         <ButtonCancel @cancel="$emit('cancel')" />
         <button type="submit" class="action-button" :disabled="isLoading || !isFormValid">
           <span v-if="isLoading" class="loading-spinner"></span>
-          <span v-else>Restore Wallet</span>
+          <span v-else>Create Wallet</span>
         </button>
       </div>
     </form>
@@ -37,10 +30,21 @@
             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
         </svg>
         <div>
-          <h3 class="success-title">{{ walletName }} Wallet Restored Successfully!</h3>
-          <p class="success-text">Your wallet has been restored.</p>
+          <h3 class="success-title">{{ createdWalletName }} wallet Created Successfully!</h3>
+          <p class="success-text"><strong>IMPORTANT:</strong> Please save your mnemonic phrase securely. You will need
+            it to recover your wallet.</p>
         </div>
       </div>
+
+      <div class="mnemonic-box">
+        <div class="mnemonic-header">
+          <span class="mnemonic-label">Recovery Phrase</span>
+          <IconCopy :text="walletResult.mnemonicPhrase" @copy-success="onCopySuccess" />
+        </div>
+        <p class="mnemonic-phrase">{{ walletResult.mnemonicPhrase }}</p>
+      </div>
+
+      <p class="warning-text">⚠️ Never share your mnemonic phrase with anyone. Store it in a safe place.</p>
     </div>
 
     <div v-if="errorMessage" class="error-message">
@@ -56,11 +60,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
-import ButtonCancel from './ButtonCancel.vue'
-import { createWalletFromMnemonic, type WalletResult } from '~/api/create'
+import IconCopy from '~/components/ui/IconCopy.vue'
+import ButtonCancel from './ui/ButtonCancel.vue'
+import { createWallet, type WalletResult } from '~/api/create'
 import { addWallet, hasWallet, normalizeWalletName, validateWalletName } from '~/utils/wallets'
 
-const props = defineProps<{ show: boolean }>()
+const props = defineProps<{
+  show: boolean
+}>()
 
 const emit = defineEmits<{
   success: [walletName: string]
@@ -68,49 +75,36 @@ const emit = defineEmits<{
 }>()
 
 const walletName = ref<string>('')
-const mnemonicPhrase = ref<string>('')
 const password = ref<string>('')
 const isLoading = ref<boolean>(false)
 const showSuccess = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const walletResult = ref<WalletResult | null>(null)
-
-const normalizeMnemonic = (phrase: string): string => {
-  return phrase.trim().toLowerCase().replace(/\s+/g, ' ').trim()
-}
-
-const isValidMnemonic = (phrase: string): boolean => {
-  const normalized = normalizeMnemonic(phrase)
-  if (!normalized) return false
-  const wordCount = normalized.split(/\s+/).length
-  return wordCount === 12 || wordCount === 15 || wordCount === 18 || wordCount === 21 || wordCount === 24
-}
+const createdWalletName = ref<string>('')
 
 const isFormValid = computed<boolean>(() => {
-  return (
-    walletName.value.trim().length > 0 &&
-    password.value.length >= 3 &&
-    isValidMnemonic(mnemonicPhrase.value)
-  )
+  return walletName.value.trim().length > 0 && password.value.length >= 3
 })
 
 const resetForm = () => {
   walletName.value = ''
-  mnemonicPhrase.value = ''
   password.value = ''
   isLoading.value = false
   showSuccess.value = false
   errorMessage.value = ''
   walletResult.value = null
+  createdWalletName.value = ''
 }
 
 const handlePasswordChange = (value: string) => {
   password.value = value
 }
 
+const onCopySuccess = () => { }
+
 const handleSubmit = async () => {
   if (!isFormValid.value) {
-    errorMessage.value = 'Please enter a valid wallet name, valid mnemonic phrase (12-24 words), and password (minimum 3 characters)'
+    errorMessage.value = 'Please enter a wallet name and valid passphrase (minimum 3 characters)'
     return
   }
 
@@ -129,17 +123,17 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    const normalizedMnemonic = normalizeMnemonic(mnemonicPhrase.value)
-    const result = await createWalletFromMnemonic(normalizedMnemonic, password.value)
+    const result = await createWallet(password.value)
     walletResult.value = result
+    createdWalletName.value = walletName.value.trim()
 
     addWallet(walletName.value, result.encryptedJson)
 
     showSuccess.value = true
-    emit('success', walletName.value.trim())
+    // emit('success', walletName.value.trim())
   } catch (error) {
-    console.error('Failed to restore wallet:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to restore wallet. Please check your mnemonic phrase and try again.'
+    console.error('Failed to create wallet:', error)
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to create wallet. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -153,7 +147,7 @@ watch(() => props.show, (newVal) => {
 </script>
 
 <style scoped>
-.restore-wallet {
+.create-wallet {
   animation: fadeIn 0.3s ease;
 }
 
@@ -169,7 +163,7 @@ watch(() => props.show, (newVal) => {
   }
 }
 
-.restore-form {
+.wallet-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -187,8 +181,7 @@ watch(() => props.show, (newVal) => {
   color: var(--color80);
 }
 
-.form-input,
-.form-textarea {
+.form-input {
   padding: 0.75rem 1rem;
   background: var(--color20);
   border: var(--border-thickness) solid var(--color40);
@@ -196,25 +189,16 @@ watch(() => props.show, (newVal) => {
   color: var(--color90);
   font-size: 1rem;
   transition: all 0.2s ease;
-  font-family: var(--mono);
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.form-input:focus,
-.form-textarea:focus {
+.form-input:focus {
   outline: none;
   border-color: var(--color-accent60);
   background: var(--color10);
 }
 
-.form-input::placeholder,
-.form-textarea::placeholder {
+.form-input::placeholder {
   color: var(--color60);
-  font-family: var(--sans);
 }
 
 .form-hint {
@@ -233,7 +217,7 @@ watch(() => props.show, (newVal) => {
   background: var(--color-accent60);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
@@ -304,6 +288,45 @@ watch(() => props.show, (newVal) => {
 .success-text {
   color: var(--color70);
   font-size: 0.875rem;
+}
+
+.mnemonic-box {
+  background: var(--color20);
+  border: var(--border-thickness) solid var(--color40);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.mnemonic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.mnemonic-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mnemonic-phrase {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--color90);
+  word-break: break-all;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.warning-text {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.75rem;
+  font-weight: 500;
 }
 
 .error-message {

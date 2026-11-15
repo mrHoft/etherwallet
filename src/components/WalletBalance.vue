@@ -29,7 +29,7 @@
       <div v-for="token in tokenBalances" :key="token.symbol">
         <div class="balance-card" :class="`${token.symbol.toLowerCase()}-card`"
           @click.stop="handleShowHistory(token.symbol)">
-          <TokenIcon :symbol="token.symbol" />
+          <IconToken :symbol="token.symbol" />
           <div class="balance-info">
             <h3 class="token-name">{{ token.name }}</h3>
             <p class="token-symbol">{{ token.symbol }}</p>
@@ -67,7 +67,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { formatUnits } from 'ethers'
 import TransactionsHistory from './TransactionsHistory.vue'
-import TokenIcon from './TokenIcon.vue'
+import IconToken from './ui/IconToken.vue'
 import { getTokenBalances } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 import { getStoredWalletAccount, syncAccountBalance } from '~/utils/accountBalance'

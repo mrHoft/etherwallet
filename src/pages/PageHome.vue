@@ -2,7 +2,7 @@
   <section>
     <div class="wallets">
       <template v-if="walletEntries.length === 0">
-        <WalletNew />
+        <WalletCardNew />
       </template>
       <template v-else>
         <WalletCard v-for="([walletName, encryptedJson], index) in walletEntries" :key="walletName"
@@ -18,7 +18,7 @@
 import { onActivated, ref } from 'vue'
 import { getWallets } from '~/utils/wallets'
 import WalletCard from '~/components/WalletCard.vue'
-import WalletNew from '~/components/WalletNew.vue'
+import WalletCardNew from '~/components/WalletCardNew.vue'
 import ModalQRCode from '~/components/ModalQRCode.vue'
 
 defineOptions({ name: 'PageHome' })

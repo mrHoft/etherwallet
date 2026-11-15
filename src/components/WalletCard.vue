@@ -3,7 +3,7 @@
     <div class="card-header">
       <div>
         <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
-        <CardBalance :address="address" />
+        <BalanceCard :address="address" />
       </div>
       <div class="qr-placeholder" @click.stop="showQR">
         <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -19,15 +19,15 @@
     <div class="address-section">
       <div class="address-value">
         <span class="address-hash">{{ formatAddress(address) }}</span>
-        <CopyIcon :text="address" />
+        <IconCopy :text="address" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import CopyIcon from '~/components/CopyIcon.vue'
-import CardBalance from '~/components/CardBalance.vue';
+import IconCopy from '~/components/ui/IconCopy.vue'
+import BalanceCard from '~/components/BalanceCard.vue';
 import { useNavigation } from '~/composables/useNavigation'
 
 const { navigateTo } = useNavigation()

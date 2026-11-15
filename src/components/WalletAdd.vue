@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
-import ButtonCancel from './ButtonCancel.vue'
+import ButtonCancel from './ui/ButtonCancel.vue'
 import { createWalletFromPrivateKey, type WalletResult } from '~/api/create'
 import { addWallet, hasWallet, normalizeWalletName, validateWalletName } from '~/utils/wallets'
 

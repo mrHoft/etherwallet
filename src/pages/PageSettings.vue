@@ -27,8 +27,7 @@
           <button type="button" :class="['theme-option', { 'theme-option--active': themePreference === 'dark' }]"
             :aria-pressed="themePreference === 'dark'" @click="setThemePreference('dark')">
             <span class="theme-option__icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="m21.96,16.11c-1.69,3.75-5.4,5.89-9.44,5.89-5.8,0-10.52-4.72-10.52-10.53,0-4.02,2.41-7.92,5.84-9.43.43-.19.72.22.57.56-.63,1.36-.99,2.77-.99,4.27,0,5.34,4.34,9.69,9.67,9.69,1.51,0,3.03-.3,4.31-1.01.46-.26.79.07.56.56Z" />
               </svg>
@@ -61,9 +60,9 @@
           <li v-for="url in providers" :key="url"
             :class="['provider-row', { 'provider-row--checking': isChecking(url) }]">
             <span :class="['provider-url', healthClass(url)]">{{ url }}</span>
-            <SquareButton label="♥" aria-label="Check provider health" title="Check provider health"
+            <ButtonSquare label="♥" aria-label="Check provider health" title="Check provider health"
               :loading="isChecking(url)" @click="handleCheckProvider(url)" />
-            <SquareButton label="-" aria-label="Remove provider" title="Remove provider"
+            <ButtonSquare label="-" aria-label="Remove provider" title="Remove provider"
               @click="handleRemoveProvider(url)" />
           </li>
         </ul>
@@ -73,7 +72,7 @@
         <form class="provider-form" novalidate @submit.prevent="handleAddProvider">
           <input v-model="newProviderUrl" type="url" class="provider-input" placeholder="https://..."
             aria-label="New RPC provider URL" />
-          <SquareButton label="+" aria-label="Add provider" title="Add provider" type="submit" />
+          <ButtonSquare label="+" aria-label="Add provider" title="Add provider" type="submit" />
         </form>
 
         <p v-if="providerError" class="provider-message provider-message--error">{{ providerError }}</p>
@@ -101,7 +100,7 @@ import { ref } from 'vue'
 import { resetAccountBalance } from '~/utils/accountBalance'
 import { addRpcUrl, getRpcUrls, removeRpcUrl } from '~/api/rpcUrls'
 import { rpcProvider } from '~/api/provider'
-import SquareButton from '~/components/SquareButton.vue'
+import ButtonSquare from '~/components/ui/ButtonSquare.vue'
 import { useTheme } from '~/composables/useTheme'
 
 type HealthStatus = 'idle' | 'checking' | 'healthy' | 'unhealthy'
@@ -325,6 +324,7 @@ const handleReset = (): void => {
 }
 
 @keyframes provider-pulse {
+
   0%,
   100% {
     opacity: 0.45;
