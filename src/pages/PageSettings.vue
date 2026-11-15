@@ -84,6 +84,7 @@
 
         <ul class="reset-description">
           <li>Reset cached values for token balances.</li>
+          <li>Clear price cache.</li>
           <li>Reset starting account value.</li>
         </ul>
 

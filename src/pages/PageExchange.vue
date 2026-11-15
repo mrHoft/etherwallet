@@ -142,7 +142,7 @@ import { ethers } from 'ethers'
 import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/const'
 import Password from '~/components/Password.vue'
-import { getFormattedGasPrice } from '~/api/gasPrice'
+import { formatGasPriceLabel } from '~/utils/gasPrice'
 import { ethState } from '~/api/ethState'
 import { decryptWallet } from '~/api/create'
 import { getTokenBalances } from '~/api/multicall3'
@@ -380,7 +380,7 @@ const routeLabel = computed<string>(() => {
 })
 
 const formattedGasPrice = computed<string>(() =>
-  getFormattedGasPrice(gasPrice.value, ethUsd.value)
+  formatGasPriceLabel(gasPrice.value, ethUsd.value)
 )
 
 const isFormValid = computed<boolean>(() =>
