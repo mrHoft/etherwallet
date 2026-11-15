@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 
 import { ethers } from 'ethers';
-import { getGasPrice, getOptimizedGasPrice } from './gasPrice';
+import { getFormattedGasPrice, getOptimizedGasPrice } from './gasPrice';
 
 describe('gasPrice', () => {
   // Helper to create a mocked ethers.Provider
@@ -11,20 +11,24 @@ describe('gasPrice', () => {
     } as unknown as ethers.Provider;
   };
 
-  describe('getGasPrice', () => {
-    it('should return gasPrice when it is not null', async () => {
-      const expectedGasPrice = 20000000000n;
-      const provider = createMockProvider({ gasPrice: expectedGasPrice });
-
-      const result = await getGasPrice(provider);
-
-      expect(result).toBe(expectedGasPrice);
+  describe('getFormattedGasPrice', () => {
+    it('shows loading and failure placeholders', () => {
+      expect(getFormattedGasPrice(0n, 1800)).toBe('Loading...');
+      expect(getFormattedGasPrice(-1n, 1800)).toBe('Failed to load');
     });
 
-    it('should throw an error when gasPrice is null', async () => {
-      const provider = createMockProvider({ gasPrice: null });
+    it('shows only Gwei when the ETH price is unavailable', () => {
+      expect(getFormattedGasPrice(10_000_000_000n, null)).toBe('10.00 Gwei');
+      expect(getFormattedGasPrice(10_000_000_000n, 0)).toBe('10.00 Gwei');
+      expect(getFormattedGasPrice(10_000_000_000n, Number.NaN)).toBe('10.00 Gwei');
+    });
 
-      await expect(getGasPrice(provider)).rejects.toThrow('Failed to get gas price');
+    it('adds the USD value of the displayed Gwei amount', () => {
+      expect(getFormattedGasPrice(10_000_000_000n, 1800)).toBe('10.00 Gwei (0.000018$)');
+    });
+
+    it('uses two decimals once the Gwei value is worth a cent', () => {
+      expect(getFormattedGasPrice(6_000_000_000_000n, 1800)).toBe('6000.00 Gwei (0.01$)');
     });
   });
 

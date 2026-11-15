@@ -47,6 +47,8 @@ const readStore = (): AccountBalanceStore => {
   return stored && typeof stored === 'object' ? stored : {}
 }
 
+export const getStoredAccounts = (): AccountBalanceStore => readStore()
+
 export const getStoredWalletAccount = (address: string): StoredWalletAccount | null => {
   const account = readStore()[address.toLowerCase()]
   return account ?? null

@@ -1,15 +1,31 @@
 import { ethers } from 'ethers';
 import { rpcProvider } from './provider';
 
-export async function getGasPrice(provider?: ethers.Provider): Promise<bigint> {
-  provider = provider || rpcProvider.getProvider();
-  const feeData = await provider.getFeeData();
+const GWEI_IN_WEI = 1e9
 
-  if (feeData.gasPrice === null) {
-    throw new Error("Failed to get gas price");
+const formatGweiUsd = (value: number): string => {
+  if (!Number.isFinite(value) || value <= 0) return '0.00'
+  if (value >= 0.01) return value.toFixed(2)
+
+  const fixed = value.toFixed(8).replace(/0+$/, '').replace(/\.$/, '')
+  return fixed || '0.00'
+}
+
+export const getFormattedGasPrice = (gasPrice: bigint, ethUsd: number | null): string => {
+  if (gasPrice === 0n) return 'Loading...'
+  if (gasPrice < 0n) return 'Failed to load'
+
+  const gwei = Number(gasPrice) / GWEI_IN_WEI
+  if (!Number.isFinite(gwei)) return 'Failed to load'
+
+  const gweiLabel = `${gwei.toFixed(2)} Gwei`
+
+  if (ethUsd === null || !Number.isFinite(ethUsd) || ethUsd <= 0) {
+    return gweiLabel
   }
 
-  return feeData.gasPrice;
+  const usdValue = (gwei * ethUsd) / GWEI_IN_WEI
+  return `${gweiLabel} (${formatGweiUsd(usdValue)}$)`
 }
 
 export async function getOptimizedGasPrice(provider?: ethers.Provider): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }> {

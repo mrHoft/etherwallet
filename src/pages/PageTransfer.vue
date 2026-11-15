@@ -67,7 +67,8 @@ import { ref, computed, onMounted } from 'vue'
 import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/const'
 import Password from '~/components/Password.vue'
-import { getGasPrice } from '~/api/gasPrice'
+import { getFormattedGasPrice } from '~/api/gasPrice'
+import { ethState } from '~/api/ethState'
 import { decryptWallet } from '~/api/create'
 import { transferToken } from '~/api/transfer'
 
@@ -83,6 +84,7 @@ const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const successMessage = ref<string>('')
 const gasPrice = ref<bigint>(0n)
+const ethUsd = ref<number | null>(null)
 
 const isAmountValid = computed<boolean>(() => {
   const value = amount.value.trim()
@@ -101,12 +103,9 @@ const isFormValid = computed<boolean>(() => {
   )
 })
 
-const formattedGasPrice = computed<string>(() => {
-  if (gasPrice.value === 0n) return 'Loading...'
-  if (gasPrice.value === -1n) return 'Failed to load'
-  const gwei = Number(gasPrice.value) / 1e9
-  return `${gwei.toFixed(2)} Gwei`
-})
+const formattedGasPrice = computed<string>(() =>
+  getFormattedGasPrice(gasPrice.value, ethUsd.value)
+)
 
 const getAddressFromJson = (encryptedJson: string): string => {
   try {
@@ -196,14 +195,23 @@ const handleSubmit = async () => {
 
 const loadGasPrice = async () => {
   try {
-    gasPrice.value = await getGasPrice()
+    gasPrice.value = await ethState.getGasPrice()
   } catch {
     gasPrice.value = -1n
   }
 }
 
+const loadEthUsd = async () => {
+  try {
+    ethUsd.value = await ethState.getUsdValue()
+  } catch {
+    ethUsd.value = null
+  }
+}
+
 onMounted(() => {
-  loadGasPrice()
+  void loadGasPrice()
+  void loadEthUsd()
 })
 </script>
 
@@ -317,6 +325,13 @@ onMounted(() => {
   justify-content: space-between;
   gap: 1rem;
   color: var(--color70);
+}
+
+.quote-value {
+  color: var(--color90);
+  font-family: var(--mono);
+  text-align: right;
+  word-break: break-word;
 }
 
 .error-message {

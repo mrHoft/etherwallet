@@ -142,7 +142,8 @@ import { ethers } from 'ethers'
 import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/const'
 import Password from '~/components/Password.vue'
-import { getGasPrice } from '~/api/gasPrice'
+import { getFormattedGasPrice } from '~/api/gasPrice'
+import { ethState } from '~/api/ethState'
 import { decryptWallet } from '~/api/create'
 import { getTokenBalances } from '~/api/multicall3'
 import {
@@ -185,6 +186,7 @@ const successMessage = ref<string>('')
 const successTxHash = ref<string>('')
 const successApprovalTxHash = ref<string>('')
 const gasPrice = ref<bigint>(0n)
+const ethUsd = ref<number | null>(null)
 const balances = ref<Record<string, { raw: string; formatted: string }>>({})
 const balanceLoading = ref<boolean>(false)
 
@@ -377,11 +379,9 @@ const routeLabel = computed<string>(() => {
   return symbols.join(' → ')
 })
 
-const formattedGasPrice = computed<string>(() => {
-  if (gasPrice.value === 0n) return 'Loading...'
-  if (gasPrice.value === -1n) return 'Failed to load'
-  return `${(Number(gasPrice.value) / 1e9).toFixed(2)} Gwei`
-})
+const formattedGasPrice = computed<string>(() =>
+  getFormattedGasPrice(gasPrice.value, ethUsd.value)
+)
 
 const isFormValid = computed<boolean>(() =>
   password.value.length >= 3 &&
@@ -514,7 +514,7 @@ const applyMax = async (): Promise<void> => {
 
   let gasReserve: bigint
   try {
-    const currentGasPrice = gasPrice.value > 0n ? gasPrice.value : await getGasPrice()
+    const currentGasPrice = gasPrice.value > 0n ? gasPrice.value : await ethState.getGasPrice()
     gasReserve = currentGasPrice * ETH_GAS_RESERVE_UNITS
   } catch {
     gasReserve = ethers.parseEther('0.01')
@@ -620,9 +620,17 @@ const reverseTokens = (): void => {
 
 const loadGasPrice = async (): Promise<void> => {
   try {
-    gasPrice.value = await getGasPrice()
+    gasPrice.value = await ethState.getGasPrice()
   } catch {
     gasPrice.value = -1n
+  }
+}
+
+const loadEthUsd = async (): Promise<void> => {
+  try {
+    ethUsd.value = await ethState.getUsdValue()
+  } catch {
+    ethUsd.value = null
   }
 }
 
@@ -655,6 +663,7 @@ watch([selectedWallet, fromToken, toToken], () => {
 
 onMounted(() => {
   void loadGasPrice()
+  void loadEthUsd()
 })
 
 onUnmounted(() => {

@@ -6,7 +6,7 @@
 - `npm run build` — the only typecheck and full verification: `vue-tsc -b && vite build`.
 - `npx jest <path>` — run one suite; `npx jest -t '<name>'` — run one test.
 - There is no `npm test`, `lint`, or `format` script. Don't invent one.
-- `npx jest` currently reports one failure: `src/api/gasPrice.test.ts` cannot compile `src/api/const.ts` because `import.meta.env` lacks Vite types under `tsconfig.test.json`. Any test importing `src/api/const.ts` needs to mock it, as `transfer.test.ts` mocks `./const` and `./provider`. Treat other failures as regressions.
+- `npx jest` runs the full suite, including `src/api/gasPrice.test.ts`, and passes. Treat any failure as a regression.
 - Jest is `testEnvironment: 'node'` and only matches `src/**/*.test.ts`. There is no jsdom or `@vue/test-utils` installed, so component tests are not set up.
 - Avoid `npm run deploy:pages` unless explicitly asked. It checks out `gh-pages` in the current worktree, copies `dist/`, commits, and pushes.
 
