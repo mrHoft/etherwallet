@@ -4,6 +4,7 @@ import PageTipCalculator from './pages/PageTipCalculator.vue'
 import PageCreateWallet from './pages/PageCreate.vue'
 import PageWallet from './pages/PageWallet.vue'
 import PageTransfer from './pages/PageTransfer.vue'
+import PageExchange from './pages/PageExchange.vue'
 import PageSettings from './pages/PageSettings.vue'
 import PageNotFound from './pages/Page404.vue'
 import { normalizePath, withBase } from '~/utils/path'
@@ -20,12 +21,14 @@ export const routes: Route[] = [
   { path: withBase('/wallet'), component: PageWallet },
   { path: withBase('/create'), component: PageCreateWallet },
   { path: withBase('/transfer'), component: PageTransfer },
+  { path: withBase('/exchange'), component: PageExchange },
   { path: withBase('/settings'), component: PageSettings },
   { path: '/', component: PageTipCalculator, showNavigation: false },
   { path: '/home', component: PageHome },
   { path: '/wallet', component: PageWallet },
   { path: '/create', component: PageCreateWallet },
   { path: '/transfer', component: PageTransfer },
+  { path: '/exchange', component: PageExchange },
   { path: '/settings', component: PageSettings },
   { path: '**', component: PageNotFound }
 ]

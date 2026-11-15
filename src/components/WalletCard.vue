@@ -75,10 +75,10 @@ const formatAddress = (address: string): string => {
   background-position: 10% center;
 }
 
-.wallet-card::before {
+.wallet-card::before,
+.wallet-card::after {
   content: '';
   position: absolute;
-  bottom: 0;
   left: 0;
   right: 0;
   height: 4px;
@@ -87,13 +87,22 @@ const formatAddress = (address: string): string => {
   transition: transform 0.3s ease;
 }
 
+.wallet-card::before {
+  top: 0;
+}
+
+.wallet-card::after {
+  bottom: 0;
+}
+
 .wallet-card:hover {
   /* transform: translateY(-4px); */
   border-color: var(--color-accent60);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
 }
 
-.wallet-card:hover::before {
+.wallet-card:hover::before,
+.wallet-card:hover::after {
   transform: scaleX(1);
 }
 

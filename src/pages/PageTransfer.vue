@@ -40,9 +40,11 @@
         <Password id="password" ref="passwordRef" v-model="password" />
       </div>
 
-      <div class="form-info">
-        <span>Gas Price: </span>
-        <span>{{ formattedGasPrice }}</span>
+      <div class="quote-details">
+        <div class="quote-row">
+          <span>Gas price</span>
+          <span class="quote-value">{{ formattedGasPrice }}</span>
+        </div>
       </div>
 
       <button type="submit" class="submit-button" :disabled="!isFormValid || isSubmitting">
@@ -275,7 +277,7 @@ onMounted(() => {
 }
 
 .submit-button {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: var(--color-accent60);
   color: var(--color90);
   font-family: var(--heading);
@@ -295,6 +297,26 @@ onMounted(() => {
 .submit-button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.quote-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  background-color: var(--color10);
+  border: var(--border-thickness) solid var(--color40);
+  border-radius: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+}
+
+.quote-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color70);
 }
 
 .error-message {

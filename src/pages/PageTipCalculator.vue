@@ -11,8 +11,7 @@
 
       <div class="percentages">
         <button v-for="percentage in percentages" :key="percentage" type="button" class="percentage-button"
-          :class="{ 'percentage-button--active': tipPercentage === percentage }"
-          @click="selectPercentage(percentage)">
+          :class="{ 'percentage-button--active': tipPercentage === percentage }" @click="selectPercentage(percentage)">
           {{ percentage }}%
         </button>
       </div>
@@ -20,6 +19,11 @@
       <div class="field">
         <label class="label" for="tip">Tip</label>
         <input id="tip" class="input" type="text" :value="tipAmount" readonly tabindex="-1" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="total">Tip</label>
+        <input id="total" class="input" type="text" :value="total" readonly tabindex="-1" />
       </div>
     </div>
   </div>
@@ -42,6 +46,12 @@ const tipAmount = computed<string>(() => {
   const amount = Number(bill.value)
   if (!Number.isFinite(amount) || amount <= 0) return '0.00'
   return ((amount * tipPercentage.value) / 100).toFixed(2)
+})
+
+const total = computed<string>(() => {
+  const amount = Number(bill.value)
+  if (!Number.isFinite(amount) || amount <= 0) return '0.00'
+  return (amount + (amount * tipPercentage.value) / 100).toFixed(2)
 })
 
 const selectPercentage = (percentage: number): void => {
