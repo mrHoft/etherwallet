@@ -15,7 +15,8 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
   stETH: { name: 'Lido Staked Ether', symbol: 'stETH', decimals: 18, contractAddress: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84', chainlinkFeed: '0xCfE54B5cD566aB89272946F602D76Ea879CAb4a8', coingeckoId: 'staked-ether' },
 }
 
-// Ethereum Mainnet Remote Procedure Call providers
+// Default Ethereum Mainnet Remote Procedure Call providers.
+// Used until a custom provider list is stored in settings.
 export const RPC_URLS = [
   // 'http://127.0.0.1:8545', // hardhat testing environment
   'https://0xrpc.io/eth',

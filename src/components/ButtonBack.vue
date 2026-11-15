@@ -13,14 +13,14 @@ const goHome = () => {
 
 <style scoped>
 .button-back {
-  background: var(--color-accent60);
+  background-color: var(--color-accent60);
   color: white;
   border: none;
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;

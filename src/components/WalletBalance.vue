@@ -2,9 +2,9 @@
   <div class="wallet-balance">
     <div class="balance-header">
       <div class="total-wrapper">
-        <h2 class="total-title">Balance</h2>
+        <h2 class="total-title">Balance:</h2>
         <span v-if="!initialLoading && totalUsdValue > 0" class="total-amount">
-          Total: ${{ formatUsd(totalUsdValue) }}
+          ${{ formatUsd(totalUsdValue) }}
           <span v-if="allTimeDelta !== null" class="total-delta" :class="allTimeDeltaClass">
             ({{ formatDeltaUsd(allTimeDelta) }})
           </span>
@@ -29,9 +29,7 @@
       <div v-for="token in tokenBalances" :key="token.symbol">
         <div class="balance-card" :class="`${token.symbol.toLowerCase()}-card`"
           @click.stop="handleShowHistory(token.symbol)">
-          <div class="token-icon" :class="token.symbol.toLowerCase()">
-            {{ getTokenIcon(token.symbol) }}
-          </div>
+          <TokenIcon :symbol="token.symbol" />
           <div class="balance-info">
             <h3 class="token-name">{{ token.name }}</h3>
             <p class="token-symbol">{{ token.symbol }}</p>
@@ -69,6 +67,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { formatUnits } from 'ethers'
 import TransactionsHistory from './TransactionsHistory.vue'
+import TokenIcon from './TokenIcon.vue'
 import { getTokenBalances } from '~/api/multicall3'
 import { TOKEN_INFO } from '~/api/const'
 import { getStoredWalletAccount, syncAccountBalance } from '~/utils/accountBalance'
@@ -144,17 +143,6 @@ const allTimeDeltaClass = computed<string>(() => {
 const tokenChangeClass = (usdDelta?: number): string => {
   if (usdDelta === undefined || usdDelta === 0) return 'neutral'
   return usdDelta < 0 ? 'negative' : 'positive'
-}
-
-const getTokenIcon = (symbol: string): string => {
-  const icons: Record<string, string> = {
-    ETH: '⟠',
-    USDT: '₮',
-    USDC: '$',
-    WETH: 'Ⓦ',
-    stETH: 'Ⓢ',
-  }
-  return icons[symbol] || '🪙'
 }
 
 const addOrUpdateBalance = (balance: TokenBalance): void => {
@@ -352,12 +340,10 @@ defineExpose({
   font-family: var(--mono);
   font-size: 1rem;
   font-weight: 700;
-  color: white;
   line-height: 1;
 }
 
 .total-delta {
-  font-size: 0.8rem;
   font-weight: 600;
   margin-left: 0.25rem;
 }
@@ -475,39 +461,6 @@ defineExpose({
   }
 }
 
-.token-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 600;
-  background-color: var(--color10);
-  border-radius: 50%;
-  border: var(--border-thickness) solid var(--color40);
-}
-
-.token-icon.eth {
-  color: #627eea;
-}
-
-.token-icon.usdt {
-  color: #26a17b;
-}
-
-.token-icon.usdc {
-  color: #2775ca;
-}
-
-.token-icon.weth {
-  color: #627eea;
-}
-
-.token-icon.steth {
-  color: #00a3ff;
-}
-
 .balance-info {
   flex: 1;
 }
@@ -619,12 +572,6 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .token-icon {
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.125rem;
-  }
-
   .token-name {
     font-size: 0.875rem;
   }

@@ -156,7 +156,7 @@ defineExpose({
 }
 
 .button-check {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: rgba(220, 38, 38, 0.1);
   color: #ef4444;
   border: var(--border-thickness) solid #ef4444;
@@ -227,7 +227,7 @@ defineExpose({
 }
 
 .button-cancel {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: var(--color20);
   color: var(--color80);
   border: var(--border-thickness) solid var(--color40);
@@ -245,7 +245,7 @@ defineExpose({
 }
 
 .button-decrypt {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: var(--color-accent60);
   color: white;
   border: none;

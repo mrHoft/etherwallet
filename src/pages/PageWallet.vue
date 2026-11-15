@@ -129,7 +129,7 @@ onMounted(() => {
 
 <style scoped>
 .page-wallet {
-  max-width: 1200px;
+  max-width: 600px;
   margin: 0 auto;
 }
 

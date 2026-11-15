@@ -4,7 +4,8 @@ Direct scan for transaction history.
 Used indexed API instead.
  */
 import { ethers } from 'ethers';
-import { RPC_URLS, TOKEN_INFO } from './const';
+import { TOKEN_INFO } from './const';
+import { getRpcUrls } from './rpcUrls';
 
 const ERC20_ABI = [
   'event Transfer(address indexed from, address indexed to, uint256 value)',
@@ -154,7 +155,10 @@ export async function getRecentERC20Transactions(tokenAddress: string, walletAdd
 }
 
 export async function example() {
-  const provider = new ethers.JsonRpcProvider(RPC_URLS[0]);
+  const rpcUrl = getRpcUrls()[0]
+  if (!rpcUrl) throw new Error('No RPC providers configured')
+
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const tokenContractAddress = TOKEN_INFO.USDT.contractAddress
   const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 

@@ -68,7 +68,7 @@ const formatAddress = (address: string): string => {
   flex-direction: column;
   justify-content: space-between;
   background-color: var(--color20);
-  background-image: url(/eth.svg);
+  background-image: url(/icons/eth.svg);
   background-size: 50%;
   background-blend-mode: soft-light;
   background-repeat: no-repeat;

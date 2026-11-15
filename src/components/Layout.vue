@@ -22,7 +22,7 @@ import Navigation from './Navigation.vue'
   left: 0;
   bottom: 0;
   right: 0;
-  background-image: url(/bg.svg);
+  background-image: url(/images/bg.svg);
   filter: invert(var(--color-scheme)) opacity(0.05);
   z-index: -1;
 }

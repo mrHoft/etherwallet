@@ -38,7 +38,7 @@ class Storage {
   }
 
   private emit() {
-    if (typeof globalThis.window !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       const state = JSON.stringify(this._state);
 
       localStorage.setItem(this.STORE_NAME, state);

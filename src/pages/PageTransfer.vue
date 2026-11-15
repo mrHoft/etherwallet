@@ -40,11 +40,9 @@
         <Password id="password" ref="passwordRef" v-model="password" />
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Gas Price</label>
-        <div class="gas-price-display">
-          {{ formattedGasPrice }}
-        </div>
+      <div class="form-info">
+        <span>Gas Price: </span>
+        <span>{{ formattedGasPrice }}</span>
       </div>
 
       <button type="submit" class="submit-button" :disabled="!isFormValid || isSubmitting">
@@ -224,6 +222,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.form-info {
+  font-size: 0.875rem;
 }
 
 .form-row {

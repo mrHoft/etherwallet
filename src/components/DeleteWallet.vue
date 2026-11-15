@@ -126,7 +126,7 @@ defineExpose({
 }
 
 .button-delete {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: rgba(220, 38, 38, 0.1);
   color: #ef4444;
   border: var(--border-thickness) solid #ef4444;
@@ -161,7 +161,7 @@ defineExpose({
   font-family: var(--sans);
   font-size: 0.875rem;
   margin: 0;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background-color: rgba(220, 38, 38, 0.1);
   border-left: 0.25rem solid #ef4444;
   border-radius: 0.25rem;
@@ -197,7 +197,7 @@ defineExpose({
 }
 
 .button-cancel {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: var(--color20);
   color: var(--color80);
   border: var(--border-thickness) solid var(--color40);
@@ -215,7 +215,7 @@ defineExpose({
 }
 
 .button-confirm {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background-color: #ef4444;
   color: white;
   border: none;

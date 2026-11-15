@@ -95,7 +95,7 @@ const handleSuccess = () => {
   font-size: 1.875rem;
   font-weight: 600;
   color: var(--color90);
-  margin-bottom: 2rem;
+  margin: 0 0 1rem;
   text-align: center;
 }
 
