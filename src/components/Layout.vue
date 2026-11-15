@@ -1,19 +1,25 @@
 <template>
-  <main class="main">
+  <main class="main" :class="{ 'main--no-navigation': !showNavigation }">
     <div class="bg"></div>
     <slot />
   </main>
-  <Navigation />
+  <Navigation v-if="showNavigation" />
 </template>
 
 <script setup lang="ts">
 import Navigation from './Navigation.vue'
+
+withDefaults(defineProps<{ showNavigation?: boolean }>(), { showNavigation: true })
 </script>
 
 <style scoped>
 .main {
   position: relative;
   height: calc(100vh - 4rem);
+}
+
+.main--no-navigation {
+  height: 100vh;
 }
 
 .bg {
@@ -29,5 +35,9 @@ import Navigation from './Navigation.vue'
 
 .main>* {
   padding: 1rem 1rem 5rem;
+}
+
+.main--no-navigation>* {
+  padding-bottom: 1rem;
 }
 </style>

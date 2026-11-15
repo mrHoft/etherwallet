@@ -68,7 +68,7 @@ const resetSelection = () => {
 
 const handleSuccess = () => {
   setTimeout(() => {
-    navigateTo('/')
+    navigateTo('/home')
   }, 3000)
 }
 </script>

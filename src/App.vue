@@ -1,5 +1,5 @@
 <template>
-  <Layout>
+  <Layout :show-navigation="currentRoute.showNavigation !== false">
     <KeepAlive :include="['PageHome']">
       <component :is="currentComponent" />
     </KeepAlive>
@@ -7,14 +7,16 @@
 </template>
 
 <script setup lang="ts">
-import { shallowRef, onMounted, onUnmounted, markRaw } from 'vue'
+import { computed, shallowRef, onMounted, onUnmounted, markRaw } from 'vue'
 import Layout from './components/Layout.vue'
-import { getRouteComponent } from './routes'
+import { getRoute } from './routes'
 
-const currentComponent = shallowRef(markRaw(getRouteComponent(window.location.pathname)))
+const currentRoute = shallowRef(getRoute(window.location.pathname))
+
+const currentComponent = computed(() => markRaw(currentRoute.value.component))
 
 const handleNavigation = () => {
-  currentComponent.value = markRaw(getRouteComponent(window.location.pathname))
+  currentRoute.value = getRoute(window.location.pathname)
 }
 
 onMounted(() => {

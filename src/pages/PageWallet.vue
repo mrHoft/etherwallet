@@ -81,7 +81,7 @@ const handleDeleteSuccess = async (): Promise<void> => {
 
   try {
     removeWallet(walletData.value.name)
-    navigateTo('/')
+    navigateTo('/home')
   } catch {
     error.value = 'Failed to delete wallet from storage'
   }

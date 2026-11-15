@@ -7,7 +7,7 @@ import { useNavigation } from '~/composables/useNavigation'
 const { navigateTo } = useNavigation()
 
 const goHome = () => {
-  navigateTo('/')
+  navigateTo('/home')
 }
 </script>
 
