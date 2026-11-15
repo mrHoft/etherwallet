@@ -22,7 +22,7 @@
       </div>
 
       <div class="field">
-        <label class="label" for="total">Tip</label>
+        <label class="label" for="total">Total</label>
         <input id="total" class="input" type="text" :value="total" readonly tabindex="-1" />
       </div>
     </div>
