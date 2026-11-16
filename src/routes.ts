@@ -7,6 +7,7 @@ import PageTransfer from './pages/PageTransfer.vue'
 import PageExchange from './pages/PageExchange.vue'
 import PageSettings from './pages/PageSettings.vue'
 import PageNotFound from './pages/PageNotFound.vue'
+import { isDecoyEnabled } from '~/utils/decoy'
 import { normalizePath, withBase } from '~/utils/path'
 
 export interface Route {
@@ -33,8 +34,19 @@ export const routes: Route[] = [
   { path: '**', component: PageNotFound }
 ]
 
+export const isLandingPath = (path: string): boolean => {
+  const normalizedPath = normalizePath(path)
+  return normalizedPath === '/' || normalizedPath === normalizePath(withBase('/'))
+}
+
 export const getRoute = (path: string): Route => {
   const normalizedPath = normalizePath(path)
+
+  if (isLandingPath(normalizedPath) && !isDecoyEnabled()) {
+    const homeRoute = routes.find(r => normalizePath(r.path) === normalizePath(withBase('/home')))
+    if (homeRoute) return homeRoute
+  }
+
   const route = routes.find(r => normalizePath(r.path) === normalizedPath)
   if (route) return route
 

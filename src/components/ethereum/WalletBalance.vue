@@ -8,6 +8,9 @@
           <span v-if="allTimeDelta !== null" class="total-delta" :class="allTimeDeltaClass">
             ({{ formatDeltaUsd(allTimeDelta) }})
           </span>
+          <span v-if="marketDeltaLabel" class="total-delta total-delta--market" :class="marketDeltaClass">
+            {{ marketDeltaLabel }}
+          </span>
         </span>
       </div>
       <button v-if="!initialLoading && !hasPendingFetches" @click="refreshBalances" class="button-refresh"
@@ -45,6 +48,9 @@
             </div>
             <span v-if="token.usdValue !== undefined && !token.loading" class="usd-value">
               ${{ formatUsd(token.usdValue) }}
+              <span v-if="formatTokenDelta(token)" class="usd-delta" :class="tokenDeltaClass(token)">
+                ({{ formatTokenDelta(token) }})
+              </span>
             </span>
           </div>
         </div>
@@ -70,6 +76,9 @@ import TransactionsHistory from './TransactionsHistory.vue'
 import IconToken from '~/components/ui/IconToken.vue'
 import { getTokenBalances } from '~/api/ethereum/multicall3'
 import { TOKEN_INFO } from '~/api/ethereum/config.ts'
+import { getPriceChanges } from '~/api/coingecko'
+import { calculatePortfolioDelta, type PortfolioDelta } from '~/utils/portfolioDelta'
+import { getBalanceDeltaPeriod, type BalanceDeltaPeriod } from '~/utils/balanceDeltaPeriod'
 import { getStoredWalletAccount, syncAccountBalance } from '~/utils/accountBalance'
 
 interface Props {
@@ -101,6 +110,8 @@ const tokenBalances = ref<TokenBalance[]>([])
 const pendingFetches = ref<number>(0)
 const showHistoryFor = ref<string>('')
 const allTimeDelta = ref<number | null>(null)
+const activePeriod = ref<BalanceDeltaPeriod>('24h')
+const priceChanges = ref<Record<string, number>>({})
 const hasPendingFetches = computed<boolean>(() => pendingFetches.value > 0)
 
 const handleShowHistory = (symbol: string) => {
@@ -114,6 +125,18 @@ const totalUsdValue = computed<number>(() => {
     }
     return total
   }, 0)
+})
+
+const marketDelta = computed<PortfolioDelta | null>(() => {
+  if (activePeriod.value === 'off') return null
+
+  const balances: Record<string, { usdValue?: number }> = {}
+  for (const token of tokenBalances.value) {
+    balances[token.symbol] = { usdValue: token.usdValue }
+  }
+
+  const delta = calculatePortfolioDelta(balances, priceChanges.value)
+  return delta.coveredUsd > 0 ? delta : null
 })
 
 const formatUsd = (value: number): string => {
@@ -140,10 +163,40 @@ const allTimeDeltaClass = computed<string>(() => {
   return allTimeDelta.value < 0 ? 'negative' : 'positive'
 })
 
+const marketDeltaLabel = computed<string>(() => {
+  const delta = marketDelta.value
+  if (!delta) return ''
+  return `(${formatDeltaUsd(delta.deltaUsd)} ${activePeriod.value})`
+})
+
+const marketDeltaClass = computed<string>(() => {
+  const delta = marketDelta.value
+  if (!delta || delta.deltaUsd === 0) return 'neutral'
+  return delta.deltaUsd < 0 ? 'negative' : 'positive'
+})
+
 const tokenChangeClass = (usdDelta?: number): string => {
   if (usdDelta === undefined || usdDelta === 0) return 'neutral'
   return usdDelta < 0 ? 'negative' : 'positive'
 }
+
+const getTokenDeltaUsd = (token: TokenBalance): number | null => {
+  if (activePeriod.value === 'off' || token.loading || !token.usdValue) return null
+
+  const change = priceChanges.value[token.symbol]
+  if (change === undefined || !Number.isFinite(change) || change <= -100) return null
+
+  const valueThen = token.usdValue / (1 + change / 100)
+  return token.usdValue - valueThen
+}
+
+const formatTokenDelta = (token: TokenBalance): string => {
+  const delta = getTokenDeltaUsd(token)
+  return delta === null ? '' : formatDeltaUsd(delta)
+}
+
+const tokenDeltaClass = (token: TokenBalance): string =>
+  tokenChangeClass(getTokenDeltaUsd(token) ?? undefined)
 
 const addOrUpdateBalance = (balance: TokenBalance): void => {
   const index = tokenBalances.value.findIndex(t => t.symbol === balance.symbol)
@@ -290,8 +343,18 @@ const refreshBalances = async (): Promise<void> => {
   error.value = ''
   pendingFetches.value = 0
 
+  const period = getBalanceDeltaPeriod()
+  activePeriod.value = period
+  priceChanges.value = {}
+
+  const changesPromise = period === 'off' ? null : getPriceChanges(Object.keys(TOKEN_INFO), period)
+
   try {
     await fetchAllBalances()
+
+    if (changesPromise) {
+      priceChanges.value = await changesPromise
+    }
   } finally {
     refreshing.value = false
     initialLoading.value = false
@@ -522,6 +585,23 @@ defineExpose({
   font-size: 0.75rem;
   color: var(--color-accent80);
   font-weight: 500;
+}
+
+.usd-delta {
+  margin-left: 0.25rem;
+  font-weight: 600;
+}
+
+.usd-delta.positive {
+  color: var(--color-up);
+}
+
+.usd-delta.negative {
+  color: var(--color-down);
+}
+
+.usd-delta.neutral {
+  color: var(--color60);
 }
 
 .loading-indicator {

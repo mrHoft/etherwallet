@@ -32,8 +32,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useNavigation } from '~/composables/useNavigation'
-
-const UNLOCK_CODE = '256'
+import { getUnlockCode } from '~/utils/decoy'
 
 const percentages = [5, 10, 20]
 
@@ -59,7 +58,8 @@ const selectPercentage = (percentage: number): void => {
 }
 
 watch(bill, (value) => {
-  if (String(value).trim() === UNLOCK_CODE) {
+  const unlockCode = getUnlockCode()
+  if (unlockCode && String(value).trim() === unlockCode) {
     navigateTo('/home')
   }
 })

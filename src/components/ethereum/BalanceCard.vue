@@ -2,9 +2,6 @@
   <div class="card-balance">
     <div class="balance-info">
       <div class="balance-value">{{ balanceTotal }}</div>
-      <div v-if="dailyChangeLabel" class="balance-change" :class="dailyChangeClass">
-        {{ dailyChangeLabel }}
-      </div>
     </div>
     <div @click.stop="handleShowSwitch" class="button-switch">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -15,39 +12,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { getPortfolioValue } from '~/api/ethereum/multicall3';
-import { get24hChanges } from '~/api/ethereum/marketChange';
 import { TOKEN_INFO } from '~/api/ethereum/config';
-import { calculatePortfolioDelta, type PortfolioDelta } from '~/utils/portfolioDelta';
 import { getStoredWalletAccount } from '~/utils/accountBalance';
 import { storage } from '~/utils/storage';
 
 const enabled = ref(false)
 const balanceTotal = ref<string>('...')
-const dailyChange = ref<PortfolioDelta | null>(null)
 const props = defineProps<{ address: string }>()
-
-const dailyChangeLabel = computed<string>(() => {
-  const change = dailyChange.value
-
-  if (!enabled.value || !change || change.deltaPercent === null || change.coveredUsd <= 0) {
-    return ''
-  }
-
-  const absoluteUsd = Math.floor(Math.abs(change.deltaUsd))
-  const usdSign = change.deltaUsd < 0 ? '-' : '+'
-  const percentSign = change.deltaPercent > 0 ? '+' : ''
-
-  return `${usdSign}$${absoluteUsd} (${percentSign}${change.deltaPercent.toFixed(2)}%) 24h`
-})
-
-const dailyChangeClass = computed<string>(() => {
-  const change = dailyChange.value
-  if (!change || change.deltaUsd === 0) return 'neutral'
-
-  return change.deltaUsd < 0 ? 'negative' : 'positive'
-})
 
 const iconView = {
   on: 'm21.94,11.72C17.8,2.77,6.19,2.78,2.06,11.72c-.08.18-.08.39,0,.57.03.07.74,1.72,2.3,3.37,2.09,2.2,4.73,3.36,7.64,3.36s5.55-1.16,7.64-3.36c1.57-1.65,2.28-3.3,2.3-3.37.08-.18.08-.39,0-.57Zm-18.14.28c3.71-6.99,12.8-6.99,16.4,0-3.71,7.01-13.02,7.01-16.4,0Zm8.2-3.49c-4.67.14-4.67,6.86,0,7,4.67-.14,4.66-6.85,0-7Z',
@@ -65,25 +38,17 @@ const seedStoredTotal = (): boolean => {
 const requestBalance = async () => {
   if (!enabled.value) {
     balanceTotal.value = '...'
-    dailyChange.value = null
     return
   }
 
-  dailyChange.value = null
   const hasStoredTotal = seedStoredTotal()
 
   if (!hasStoredTotal) {
     balanceTotal.value = '$--.--'
   }
-
-  const changesPromise = get24hChanges(Object.keys(TOKEN_INFO))
-
   try {
     const data = await getPortfolioValue(props.address, Object.keys(TOKEN_INFO))
     balanceTotal.value = `$${data.totalUsdValue.toFixed(2)}`
-
-    const changes = await changesPromise
-    dailyChange.value = calculatePortfolioDelta(data.balances, changes)
   } catch (error) {
     console.error('Failed to fetch portfolio value:', error)
     if (!hasStoredTotal) {
@@ -142,25 +107,5 @@ onMounted(() => {
   font-family: var(--mono);
   font-size: 0.9rem;
   font-weight: 500;
-}
-
-.balance-change {
-  margin-top: 0.125rem;
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.balance-change.positive {
-  color: var(--color-up);
-}
-
-.balance-change.negative {
-  color: var(--color-down);
-}
-
-.balance-change.neutral {
-  color: var(--color60);
 }
 </style>

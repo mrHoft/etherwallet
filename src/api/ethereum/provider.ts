@@ -60,15 +60,16 @@ class RPCProvider {
     }
   }
 
-  public async checkProviderHealthy(url: string): Promise<boolean> {
+  public async checkProviderHealthy(url: string): Promise<{ healthy: boolean; latencyMs: number }> {
     let provider: JsonRpcProvider | null = null
+    const startedAt = performance.now()
 
     try {
       provider = this.createProvider(url)
       await this.withTimeout(provider.getBlockNumber())
-      return true
+      return { healthy: true, latencyMs: Math.round(performance.now() - startedAt) }
     } catch {
-      return false
+      return { healthy: false, latencyMs: Math.round(performance.now() - startedAt) }
     } finally {
       provider?.destroy?.()
     }

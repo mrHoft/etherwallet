@@ -9,14 +9,24 @@
 <script setup lang="ts">
 import { computed, shallowRef, onMounted, onUnmounted, markRaw } from 'vue'
 import Layout from './components/Layout.vue'
-import { getRoute } from './routes'
+import { getRoute, isLandingPath } from './routes'
+import { isDecoyEnabled } from '~/utils/decoy'
+import { withBase } from '~/utils/path'
 
-const currentRoute = shallowRef(getRoute(window.location.pathname))
+const resolveRoute = () => {
+  if (isLandingPath(window.location.pathname) && !isDecoyEnabled()) {
+    window.history.replaceState({}, '', withBase('/home'))
+  }
+
+  return getRoute(window.location.pathname)
+}
+
+const currentRoute = shallowRef(resolveRoute())
 
 const currentComponent = computed(() => markRaw(currentRoute.value.component))
 
 const handleNavigation = () => {
-  currentRoute.value = getRoute(window.location.pathname)
+  currentRoute.value = resolveRoute()
 }
 
 onMounted(() => {

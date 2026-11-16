@@ -11,7 +11,7 @@ jest.mock('./provider', () => ({
   },
 }))
 
-jest.mock('../utils/accountBalance', () => ({
+jest.mock('~/utils/accountBalance', () => ({
   getStoredAccounts: jest.fn(),
 }))
 

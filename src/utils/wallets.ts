@@ -51,6 +51,22 @@ export const getWallets = (): WalletMap => {
   return loadWallets()
 }
 
+export const setWalletOrder = (orderedNames: string[]): void => {
+  const wallets = loadWallets()
+  const reordered: WalletMap = {}
+
+  for (const name of orderedNames) {
+    if (hasOwnWallet(wallets, name)) reordered[name] = wallets[name]
+  }
+
+  for (const [name, encryptedJson] of Object.entries(wallets)) {
+    if (!hasOwnWallet(reordered, name)) reordered[name] = encryptedJson
+  }
+
+  walletCache = reordered
+  persistWallets(reordered)
+}
+
 export const hasWallet = (name: string): boolean => {
   return hasOwnWallet(loadWallets(), normalizeWalletName(name))
 }

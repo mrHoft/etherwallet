@@ -51,3 +51,15 @@ export const removeRpcUrl = (url: string): void => {
   const urls = getRpcUrls()
   storage.set(STORAGE_KEY, urls.filter(existingUrl => existingUrl !== url))
 }
+
+export const resetRpcUrls = (): void => {
+  storage.remove(STORAGE_KEY)
+}
+
+export const setRpcUrlOrder = (urls: string[]): void => {
+  const currentUrls = getRpcUrls()
+  const isSameSet = urls.length === currentUrls.length && urls.every(url => currentUrls.includes(url))
+  if (!isSameSet) return
+
+  storage.set(STORAGE_KEY, [...urls])
+}

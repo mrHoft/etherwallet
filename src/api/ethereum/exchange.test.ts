@@ -4,7 +4,7 @@ import { rpcProvider } from './provider';
 import { TOKEN_INFO, UNISWAP_V2_ROUTER_ADDRESS } from './config';
 
 jest.mock('./provider');
-jest.mock('./const', () => ({
+jest.mock('./config', () => ({
   UNISWAP_V2_ROUTER_ADDRESS: '0xRouterAddress',
   TOKEN_INFO: {
     ETH: {

@@ -5,7 +5,7 @@ import { TOKEN_INFO } from './config';
 
 // Mock external dependencies
 jest.mock('./provider');
-jest.mock('./const', () => ({
+jest.mock('./config', () => ({
   TOKEN_INFO: {
     USDC: {
       symbol: 'USDC',

@@ -1,3 +1,5 @@
+import { getGasDisplayPreference, type GasDisplayPreference } from './gasDisplay'
+
 const GWEI_IN_WEI = 1e9
 
 const formatGweiUsd = (value: number): string => {
@@ -8,7 +10,11 @@ const formatGweiUsd = (value: number): string => {
   return fixed || '0.00'
 }
 
-export const formatGasPriceLabel = (gasPrice: bigint, ethUsd: number | null): string => {
+export const formatGasPriceLabel = (
+  gasPrice: bigint,
+  ethUsd: number | null,
+  format: GasDisplayPreference = getGasDisplayPreference()
+): string => {
   if (gasPrice === 0n) return 'Loading...'
   if (gasPrice < 0n) return 'Failed to load'
 
@@ -17,7 +23,7 @@ export const formatGasPriceLabel = (gasPrice: bigint, ethUsd: number | null): st
 
   const gweiLabel = `${gwei.toFixed(2)} Gwei`
 
-  if (ethUsd === null || !Number.isFinite(ethUsd) || ethUsd <= 0) {
+  if (format === 'gwei' || ethUsd === null || !Number.isFinite(ethUsd) || ethUsd <= 0) {
     return gweiLabel
   }
 
