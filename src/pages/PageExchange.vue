@@ -156,22 +156,34 @@ import {
   type SwapQuote,
   type SwapStage
 } from '~/api/ethereum/exchange'
+import { getFormValues, saveFormValues } from '~/utils/formValues'
 
 const NATIVE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
 const QUOTE_DEBOUNCE_MS = 400
 const ETH_GAS_RESERVE_UNITS = 400_000n
+const FORM_NETWORK = 'ethereum'
+const FORM_NAME = 'exchange'
 
-const walletEntries = Object.entries(getWallets())
+const wallets = getWallets()
+const walletEntries = Object.entries(wallets)
 const tokenOptions = Object.entries(TOKEN_INFO).map(([symbol, info]) => ({
   symbol,
   name: info.name
 }))
+const tokenSymbols = new Set(Object.keys(TOKEN_INFO))
+
+const savedFormValues = getFormValues(FORM_NETWORK, FORM_NAME)
+const savedWallet = savedFormValues.walletFrom ?? ''
+const savedFromToken = savedFormValues.tokenFrom ?? ''
+const savedToToken = savedFormValues.tokenTo ?? ''
 
 const password = ref<string>('')
 const passwordRef = ref()
-const selectedWallet = ref<string>('')
-const fromToken = ref<string>('ETH')
-const toToken = ref<string>('USDC')
+const selectedWallet = ref<string>(
+  Object.prototype.hasOwnProperty.call(wallets, savedWallet) ? savedWallet : ''
+)
+const fromToken = ref<string>(tokenSymbols.has(savedFromToken) ? savedFromToken : 'ETH')
+const toToken = ref<string>(tokenSymbols.has(savedToToken) ? savedToToken : 'USDC')
 const amount = ref<string>('')
 const toAmount = ref<string>('')
 const quoteMode = ref<SwapMode>('exactIn')
@@ -658,6 +670,11 @@ watch([fromToken, toToken, activeAmount, slippagePercent, quoteMode], () => {
 }, { immediate: true })
 
 watch([selectedWallet, fromToken, toToken], () => {
+  saveFormValues(FORM_NETWORK, FORM_NAME, {
+    walletFrom: selectedWallet.value,
+    tokenFrom: fromToken.value,
+    tokenTo: toToken.value
+  })
   void loadBalances()
 }, { immediate: true })
 

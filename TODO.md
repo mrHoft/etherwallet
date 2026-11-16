@@ -9,7 +9,3 @@ WalletBalance.vue:212 and CardBalance.vue:79 always fetch every symbol in TOKEN_
 
 # Network
 - Add a new "Etherscan" section (as external component) to the PageSettings with description "Used to request transaction history" and field for ETHERSCAN_API_KEY.
-
-# Behavior
-- Make PageTransfer.vue, PageExchange.vue to remember last used form values (only 'wallet from', 'wallet to', 'token' fields).
-Save form values to storage with key 'form.ethereum.{transfer/exchange}' for the future compatibility with Tron components.

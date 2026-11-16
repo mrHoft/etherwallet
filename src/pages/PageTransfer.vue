@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/ethereum/config'
 import Password from '~/components/ui/Password.vue'
@@ -71,14 +71,26 @@ import { formatGasPriceLabel } from '~/utils/gasPrice'
 import { ethState } from '~/api/ethereum/ethState'
 import { decryptWallet } from '~/api/ethereum/create'
 import { transferToken } from '~/api/ethereum/transfer'
+import { getFormValues, saveFormValues } from '~/utils/formValues'
 
-const walletEntries = Object.entries(getWallets())
+const FORM_NETWORK = 'ethereum'
+const FORM_NAME = 'transfer'
+
+const wallets = getWallets()
+const walletEntries = Object.entries(wallets)
+const tokenSymbols = new Set(Object.keys(TOKEN_INFO))
+
+const savedFormValues = getFormValues(FORM_NETWORK, FORM_NAME)
+const savedWallet = savedFormValues.walletFrom ?? ''
+const savedToken = savedFormValues.token ?? ''
 
 const password = ref<string>('')
 const passwordRef = ref()
-const selectedWallet = ref<string>('')
-const recipientAddress = ref<string>('')
-const selectedToken = ref<string>('')
+const selectedWallet = ref<string>(
+  Object.prototype.hasOwnProperty.call(wallets, savedWallet) ? savedWallet : ''
+)
+const recipientAddress = ref<string>(savedFormValues.walletTo ?? '')
+const selectedToken = ref<string>(tokenSymbols.has(savedToken) ? savedToken : '')
 const amount = ref<string>('')
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
@@ -106,6 +118,14 @@ const isFormValid = computed<boolean>(() => {
 const formattedGasPrice = computed<string>(() =>
   formatGasPriceLabel(gasPrice.value, ethUsd.value)
 )
+
+watch([selectedWallet, recipientAddress, selectedToken], () => {
+  saveFormValues(FORM_NETWORK, FORM_NAME, {
+    walletFrom: selectedWallet.value,
+    walletTo: recipientAddress.value,
+    token: selectedToken.value
+  })
+})
 
 const getAddressFromJson = (encryptedJson: string): string => {
   try {
