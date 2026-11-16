@@ -16,7 +16,7 @@
 
       <div class="form-group">
         <label class="form-label">Password</label>
-        <Password v-model="password" :max-length="6" @complete="onPassphraseComplete" />
+        <Password v-model="password" :max-length="8" @complete="onPassphraseComplete" />
         <p class="form-hint">Enter a password to encrypt your wallet</p>
       </div>
 
@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import Password from '~/components/Password.vue'
+import Password from '~/components/ui/Password.vue'
 import ButtonCancel from './ui/ButtonCancel.vue'
 import { createWalletFromPrivateKey, type WalletResult } from '~/api/ethereum/create'
 import { addWallet, hasWallet, normalizeWalletName, validateWalletName } from '~/utils/wallets'

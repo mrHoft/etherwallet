@@ -9,8 +9,8 @@
 
       <div class="form-group">
         <label class="form-label">Password</label>
-        <Password v-model="password" :max-length="6" @complete="handlePasswordChange" />
-        <p class="form-hint">Enter a 6-character passphrase for security (minimum 3 characters)</p>
+        <Password v-model="password" :max-length="8" @complete="handlePasswordChange" />
+        <p class="form-hint">Enter an 8-character passphrase for security (minimum 3 characters)</p>
       </div>
 
       <div class="form-actions">
@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import Password from '~/components/Password.vue'
+import Password from '~/components/ui/Password.vue'
 import IconCopy from '~/components/ui/IconCopy.vue'
 import ButtonCancel from './ui/ButtonCancel.vue'
 import { createWallet, type WalletResult } from '~/api/ethereum/create'

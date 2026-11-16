@@ -66,7 +66,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { getWallets } from '~/utils/wallets'
 import { TOKEN_INFO } from '~/api/ethereum/config'
-import Password from '~/components/Password.vue'
+import Password from '~/components/ui/Password.vue'
 import { formatGasPriceLabel } from '~/utils/gasPrice'
 import { ethState } from '~/api/ethereum/ethState'
 import { decryptWallet } from '~/api/ethereum/create'

@@ -10,7 +10,7 @@
 
       <div class="password-field">
         <label for="check-password" class="password-label">Wallet Password</label>
-        <Password id="check-password" ref="passwordRef" v-model="password" :max-length="6" />
+        <Password id="check-password" ref="passwordRef" v-model="password" :max-length="8" />
       </div>
 
       <div v-if="errorMessage" class="error-message-display">
@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 const showForm = ref<boolean>(false)
-import Password from '~/components/Password.vue'
+import Password from '~/components/ui/Password.vue'
 import { decryptWallet } from '~/api/ethereum/create'
 
 interface Props {
