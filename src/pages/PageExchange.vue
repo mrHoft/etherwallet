@@ -166,11 +166,13 @@ const FORM_NAME = 'exchange'
 
 const wallets = getWallets()
 const walletEntries = Object.entries(wallets)
-const tokenOptions = Object.entries(TOKEN_INFO).map(([symbol, info]) => ({
-  symbol,
-  name: info.name
-}))
-const tokenSymbols = new Set(Object.keys(TOKEN_INFO))
+const tokenOptions = Object.entries(TOKEN_INFO)
+  .filter(([, info]) => !info.interestBearing)
+  .map(([symbol, info]) => ({
+    symbol,
+    name: info.name
+  }))
+const tokenSymbols = new Set(tokenOptions.map(option => option.symbol))
 
 const savedFormValues = getFormValues(FORM_NETWORK, FORM_NAME)
 const savedWallet = savedFormValues.walletFrom ?? ''

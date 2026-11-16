@@ -1,9 +1,8 @@
 import { formatUnits } from 'ethers'
+import { REBASE_TOKEN_SYMBOLS } from '~/api/ethereum/config'
 import { storage } from './storage'
 
 const STORAGE_KEY = 'accountBalance'
-const REBASE_TOLERANCE_DENOMINATOR = 10_000n // ~0.01%
-const REBASE_TOKEN_SYMBOLS = new Set(['stETH'])
 
 export interface BalanceData {
   raw: string
@@ -147,12 +146,8 @@ export const syncAccountBalance = (
 
     const absoluteDelta = deltaRaw < 0n ? -deltaRaw : deltaRaw
 
-    // Ignore small rebasing changes (e.g. stETH daily rewards).
-    if (
-      REBASE_TOKEN_SYMBOLS.has(symbol) &&
-      previousRaw > 0n &&
-      absoluteDelta * REBASE_TOLERANCE_DENOMINATOR < previousRaw
-    ) {
+    // Rebasing balances change from interest, not from wallet transactions.
+    if (REBASE_TOKEN_SYMBOLS.has(symbol)) {
       continue
     }
 

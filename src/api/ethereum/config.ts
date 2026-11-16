@@ -4,7 +4,12 @@ export interface TokenInfo {
   decimals: number
   contractAddress: string
   chainlinkFeed: string
-  coingeckoId?: string
+  coingeckoId: string
+  interestBearing?: {
+    protocol: string
+    pool: string
+    underlying: string
+  }
 }
 
 export const TOKEN_INFO: Record<string, TokenInfo> = {
@@ -13,7 +18,14 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
   USDC: { name: 'USD Coin', symbol: 'USDC', decimals: 6, contractAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', chainlinkFeed: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6', coingeckoId: 'usd-coin' },
   WETH: { name: 'Wrapped Ethereum', symbol: 'WETH', decimals: 18, contractAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chainlinkFeed: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', coingeckoId: 'weth' },
   stETH: { name: 'Lido Staked Ether', symbol: 'stETH', decimals: 18, contractAddress: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84', chainlinkFeed: '0xCfE54B5cD566aB89272946F602D76Ea879CAb4a8', coingeckoId: 'staked-ether' },
-  // aEthUSDC:{name:'Aave Ethereum USDC', symbol: 'aToken', decimals: 18, contractAddress:'0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c'}
+  aEthUSDC: {
+    name: 'Aave Ethereum USDC', symbol: 'aEthUSDC', decimals: 6, contractAddress: '0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c', chainlinkFeed: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6', coingeckoId: 'usd-coin',
+    interestBearing: {
+      protocol: 'aave-v3',
+      pool: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
+      underlying: 'USDC',
+    }
+  }
 }
 
 // Default Ethereum Mainnet Remote Procedure Call providers.
@@ -24,16 +36,19 @@ export const RPC_URLS = [
   'https://mainnet.gateway.tenderly.co',
 ]
 
-export const MAX_PRICE_AGE_SECONDS = 3600 * 4;
+export const MAX_PRICE_AGE_SECONDS = 3600 * 4
 
-export const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11';
+export const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11'
 
-// Uniswap V2 Router02 on Ethereum mainnet.
-export const UNISWAP_V2_ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
+export const UNISWAP_V2_ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 
-export const PRICE_CACHE_DURATION_MS = MAX_PRICE_AGE_SECONDS * 1000;
+export const PRICE_CACHE_DURATION_MS = MAX_PRICE_AGE_SECONDS * 1000
 
 export const NETWORK_ID = 1
+
+export const AAVE_V3_POOL_ADDRESS = '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+
+export const REBASE_TOKEN_SYMBOLS = new Set(['stETH', 'aEthUSDC'])
 
 /*
 const environment: 'mainnet' | 'hardhat' = import.meta.env.VITE_APP_ENV

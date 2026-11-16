@@ -22,8 +22,8 @@
           <label class="form-label" for="token">Token</label>
           <select id="token" v-model="selectedToken" class="form-select" required>
             <option value="" disabled>Select token</option>
-            <option v-for="(info, symbol) in TOKEN_INFO" :key="symbol" :value="symbol">
-              {{ symbol }} - {{ info.name }}
+            <option v-for="option in tokenOptions" :key="option.symbol" :value="option.symbol">
+              {{ option.symbol }} - {{ option.name }}
             </option>
           </select>
         </div>
@@ -78,7 +78,10 @@ const FORM_NAME = 'transfer'
 
 const wallets = getWallets()
 const walletEntries = Object.entries(wallets)
-const tokenSymbols = new Set(Object.keys(TOKEN_INFO))
+const tokenOptions = Object.entries(TOKEN_INFO)
+  .filter(([, info]) => !info.interestBearing)
+  .map(([symbol, info]) => ({ symbol, name: info.name }))
+const tokenSymbols = new Set(tokenOptions.map(option => option.symbol))
 
 const savedFormValues = getFormValues(FORM_NETWORK, FORM_NAME)
 const savedWallet = savedFormValues.walletFrom ?? ''
