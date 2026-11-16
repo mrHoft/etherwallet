@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { getTokenHistory, type TransactionRecord } from '~/api/etherscan.ts'
+import { getTokenHistory, type TransactionRecord } from '~/api/ethereum/etherscan.ts'
 
 interface Props { address: string, symbol: string }
 

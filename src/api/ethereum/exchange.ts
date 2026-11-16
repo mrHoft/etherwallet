@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { TOKEN_INFO, UNISWAP_V2_ROUTER_ADDRESS, type TokenInfo } from './const';
+import { TOKEN_INFO, UNISWAP_V2_ROUTER_ADDRESS, type TokenInfo } from './config';
 import { rpcProvider } from './provider';
 
 const NATIVE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000';

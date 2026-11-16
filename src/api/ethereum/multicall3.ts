@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { TOKEN_INFO, MAX_PRICE_AGE_SECONDS, MULTICALL3_ADDRESS } from './const';
+import { TOKEN_INFO, MAX_PRICE_AGE_SECONDS, MULTICALL3_ADDRESS } from './config';
 import { rpcProvider } from './provider';
 import { tokenValue, type CachedPriceData } from './tokenPrice';
 

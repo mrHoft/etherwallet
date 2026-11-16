@@ -3,7 +3,7 @@
 import { ethers } from 'ethers'
 import { EthState, ethState } from './ethState'
 import { rpcProvider } from './provider'
-import { getStoredAccounts } from '../utils/accountBalance'
+import { getStoredAccounts } from '~/utils/accountBalance'
 
 jest.mock('./provider', () => ({
   rpcProvider: {

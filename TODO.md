@@ -18,7 +18,7 @@ At the PageSettings "Mainnet providers" section:
 - Make checkProviderHealthy() to return and show latency.
 - Add "Restore default" button to reset providers to RPC_URLS (const.ts:20).
 
-Is Etherscan api actually need? Can it be replaced by RPS providers?
+- Add a new "Etherscan" section to the PageSettings with description "Used to request transaction history" and field for ETHERSCAN_API_KEY.
 
 # Home page
 Add a new "Decoy page" section to the PageSettings with options:

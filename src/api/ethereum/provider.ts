@@ -1,5 +1,5 @@
 import { FallbackProvider, JsonRpcProvider } from 'ethers';
-import { NETWORK_ID } from './const';
+import { NETWORK_ID } from './config';
 import { getRpcUrls } from './rpcUrls';
 
 const REQUEST_TIMEOUT_MS = 2500

@@ -47,7 +47,7 @@
 import { ref, computed } from 'vue'
 const showForm = ref<boolean>(false)
 import Password from '~/components/Password.vue'
-import { decryptWallet } from '~/api/create'
+import { decryptWallet } from '~/api/ethereum/create'
 
 interface Props {
   walletName: string

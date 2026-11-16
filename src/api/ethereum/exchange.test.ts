@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { describeSwapError, executeSwap, getSwapQuote } from './exchange';
 import { rpcProvider } from './provider';
-import { TOKEN_INFO, UNISWAP_V2_ROUTER_ADDRESS } from './const';
+import { TOKEN_INFO, UNISWAP_V2_ROUTER_ADDRESS } from './config';
 
 jest.mock('./provider');
 jest.mock('./const', () => ({
@@ -113,8 +113,8 @@ describe('exchange', () => {
       const quote = await getSwapQuote('USDC', 'USDT', '1', 50);
 
       expect(mockContract.getAmountsOut).toHaveBeenCalledWith(1_000_000n, [
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).USDT.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.USDT.contractAddress,
       ]);
       expect(quote.kind).toBe('tokenToToken');
       expect(quote.amountIn).toBe(1_000_000n);
@@ -130,8 +130,8 @@ describe('exchange', () => {
       const quote = await getSwapQuote('ETH', 'USDC', '1');
 
       expect(mockContract.getAmountsOut).toHaveBeenCalledWith(1_000_000_000_000_000_000n, [
-        (TOKEN_INFO as any).WETH.contractAddress,
-        (TOKEN_INFO as any).USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
       ]);
       expect(quote.kind).toBe('ethToToken');
       expect(quote.pathSymbols).toEqual(['WETH', 'USDC']);
@@ -143,8 +143,8 @@ describe('exchange', () => {
       const quote = await getSwapQuote('USDC', 'ETH', '1');
 
       expect(mockContract.getAmountsOut).toHaveBeenCalledWith(1_000_000n, [
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).WETH.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
       ]);
       expect(quote.kind).toBe('tokenToEth');
       expect(quote.pathSymbols).toEqual(['USDC', 'WETH']);
@@ -158,14 +158,14 @@ describe('exchange', () => {
       const quote = await getSwapQuote('USDC', 'USDT', '1');
 
       expect(mockContract.getAmountsOut).toHaveBeenLastCalledWith(1_000_000n, [
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).WETH.contractAddress,
-        (TOKEN_INFO as any).USDT.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
+        TOKEN_INFO.USDT.contractAddress,
       ]);
       expect(quote.path).toEqual([
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).WETH.contractAddress,
-        (TOKEN_INFO as any).USDT.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
+        TOKEN_INFO.USDT.contractAddress,
       ]);
       expect(quote.amountOut).toBe(3_000_000n);
       expect(quote.pathSymbols).toEqual(['USDC', 'WETH', 'USDT']);
@@ -177,8 +177,8 @@ describe('exchange', () => {
       const quote = await getSwapQuote('USDC', 'USDT', '2', 50, 'exactOut');
 
       expect(mockContract.getAmountsIn).toHaveBeenCalledWith(2_000_000n, [
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).USDT.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.USDT.contractAddress,
       ]);
       expect(quote.mode).toBe('exactOut');
       expect(quote.amountIn).toBe(999_000n);
@@ -193,8 +193,8 @@ describe('exchange', () => {
       const quote = await getSwapQuote('ETH', 'USDC', '3000', 50, 'exactOut');
 
       expect(mockContract.getAmountsIn).toHaveBeenCalledWith(3_000_000_000n, [
-        (TOKEN_INFO as any).WETH.contractAddress,
-        (TOKEN_INFO as any).USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
       ]);
       expect(quote.mode).toBe('exactOut');
       expect(quote.amountIn).toBe(500_000_000_000_000_000n);
@@ -210,9 +210,9 @@ describe('exchange', () => {
       const quote = await getSwapQuote('USDC', 'USDT', '3', 50, 'exactOut');
 
       expect(mockContract.getAmountsIn).toHaveBeenLastCalledWith(3_000_000n, [
-        (TOKEN_INFO as any).USDC.contractAddress,
-        (TOKEN_INFO as any).WETH.contractAddress,
-        (TOKEN_INFO as any).USDT.contractAddress,
+        TOKEN_INFO.USDC.contractAddress,
+        TOKEN_INFO.WETH.contractAddress,
+        TOKEN_INFO.USDT.contractAddress,
       ]);
       expect(quote.amountIn).toBe(1_000_000n);
       expect(quote.amountOut).toBe(3_000_000n);
@@ -288,7 +288,7 @@ describe('exchange', () => {
       expect(mockContract.swapExactTokensForTokens).toHaveBeenCalledWith(
         1_000_000n,
         1_990_000n,
-        [(TOKEN_INFO as any).USDC.contractAddress, (TOKEN_INFO as any).USDT.contractAddress],
+        [TOKEN_INFO.USDC.contractAddress, TOKEN_INFO.USDT.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({ gasLimit: 120_000n })
@@ -342,7 +342,7 @@ describe('exchange', () => {
       expect(mockContract.allowance).not.toHaveBeenCalled();
       expect(mockContract.swapExactETHForTokens).toHaveBeenCalledWith(
         2_985_000_000n,
-        [(TOKEN_INFO as any).WETH.contractAddress, (TOKEN_INFO as any).USDC.contractAddress],
+        [TOKEN_INFO.WETH.contractAddress, TOKEN_INFO.USDC.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({
@@ -362,7 +362,7 @@ describe('exchange', () => {
       expect(mockContract.swapExactTokensForETH).toHaveBeenCalledWith(
         1_000_000n,
         995_000_000_000_000_000n,
-        [(TOKEN_INFO as any).USDC.contractAddress, (TOKEN_INFO as any).WETH.contractAddress],
+        [TOKEN_INFO.USDC.contractAddress, TOKEN_INFO.WETH.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({ gasLimit: 120_000n })
@@ -379,7 +379,7 @@ describe('exchange', () => {
       expect(mockContract.swapExactTokensForTokens).toHaveBeenCalledWith(
         1_000_000n,
         1_990_000n,
-        [(TOKEN_INFO as any).USDC.contractAddress, (TOKEN_INFO as any).USDT.contractAddress],
+        [TOKEN_INFO.USDC.contractAddress, TOKEN_INFO.USDT.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({ gasLimit: 250_000n })
@@ -403,7 +403,7 @@ describe('exchange', () => {
       expect(mockContract.swapTokensForExactTokens).toHaveBeenCalledWith(
         2_000_000n,
         1_003_995n,
-        [(TOKEN_INFO as any).USDC.contractAddress, (TOKEN_INFO as any).USDT.contractAddress],
+        [TOKEN_INFO.USDC.contractAddress, TOKEN_INFO.USDT.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({ gasLimit: 120_000n })
@@ -424,7 +424,7 @@ describe('exchange', () => {
       expect(mockContract.allowance).not.toHaveBeenCalled();
       expect(mockContract.swapETHForExactTokens).toHaveBeenCalledWith(
         3_000_000_000n,
-        [(TOKEN_INFO as any).WETH.contractAddress, (TOKEN_INFO as any).USDC.contractAddress],
+        [TOKEN_INFO.WETH.contractAddress, TOKEN_INFO.USDC.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({
@@ -449,7 +449,7 @@ describe('exchange', () => {
       expect(mockContract.swapTokensForExactETH).toHaveBeenCalledWith(
         1_000_000_000_000_000_000n,
         1_005_000n,
-        [(TOKEN_INFO as any).USDC.contractAddress, (TOKEN_INFO as any).WETH.contractAddress],
+        [TOKEN_INFO.USDC.contractAddress, TOKEN_INFO.WETH.contractAddress],
         mockWalletAddress,
         expect.any(BigInt),
         expect.objectContaining({ gasLimit: 120_000n })

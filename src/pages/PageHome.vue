@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { onActivated, ref } from 'vue'
 import { getWallets } from '~/utils/wallets'
-import WalletCard from '~/components/WalletCard.vue'
+import WalletCard from '~/components/ethereum/WalletCard.vue'
 import WalletCardNew from '~/components/WalletCardNew.vue'
 import ModalQRCode from '~/components/ModalQRCode.vue'
 

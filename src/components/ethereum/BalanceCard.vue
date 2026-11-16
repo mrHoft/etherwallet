@@ -16,9 +16,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { getPortfolioValue } from '~/api/multicall3';
-import { get24hChanges } from '~/api/marketChange';
-import { TOKEN_INFO } from '~/api/const';
+import { getPortfolioValue } from '~/api/ethereum/multicall3';
+import { get24hChanges } from '~/api/ethereum/marketChange';
+import { TOKEN_INFO } from '~/api/ethereum/config';
 import { calculatePortfolioDelta, type PortfolioDelta } from '~/utils/portfolioDelta';
 import { getStoredWalletAccount } from '~/utils/accountBalance';
 import { storage } from '~/utils/storage';

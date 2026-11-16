@@ -67,9 +67,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { formatUnits } from 'ethers'
 import TransactionsHistory from './TransactionsHistory.vue'
-import IconToken from './ui/IconToken.vue'
-import { getTokenBalances } from '~/api/multicall3'
-import { TOKEN_INFO } from '~/api/const'
+import IconToken from '~/components/ui/IconToken.vue'
+import { getTokenBalances } from '~/api/ethereum/multicall3'
+import { TOKEN_INFO } from '~/api/ethereum/config.ts'
 import { getStoredWalletAccount, syncAccountBalance } from '~/utils/accountBalance'
 
 interface Props {

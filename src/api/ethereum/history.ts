@@ -4,7 +4,7 @@ Direct scan for transaction history.
 Used indexed API instead.
  */
 import { ethers } from 'ethers';
-import { TOKEN_INFO } from './const';
+import { TOKEN_INFO } from './config';
 import { getRpcUrls } from './rpcUrls';
 
 const ERC20_ABI = [

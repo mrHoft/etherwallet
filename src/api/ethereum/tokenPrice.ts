@@ -1,4 +1,4 @@
-import { TOKEN_INFO, PRICE_CACHE_DURATION_MS } from './const';
+import { TOKEN_INFO, PRICE_CACHE_DURATION_MS } from './config';
 
 export interface CachedPriceData {
   value: bigint;

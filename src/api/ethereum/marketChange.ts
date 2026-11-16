@@ -1,4 +1,4 @@
-import { TOKEN_INFO } from './const'
+import { TOKEN_INFO } from './config'
 
 const API_URL = 'https://api.coingecko.com/api/v3/simple/price'
 const CACHE_TTL_MS = 5 * 60 * 1000

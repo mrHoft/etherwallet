@@ -13,6 +13,7 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
   USDC: { name: 'USD Coin', symbol: 'USDC', decimals: 6, contractAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', chainlinkFeed: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6', coingeckoId: 'usd-coin' },
   WETH: { name: 'Wrapped Ethereum', symbol: 'WETH', decimals: 18, contractAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chainlinkFeed: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', coingeckoId: 'weth' },
   stETH: { name: 'Lido Staked Ether', symbol: 'stETH', decimals: 18, contractAddress: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84', chainlinkFeed: '0xCfE54B5cD566aB89272946F602D76Ea879CAb4a8', coingeckoId: 'staked-ether' },
+  // aEthUSDC:{name:'Aave Ethereum USDC', symbol: 'aToken', decimals: 18, contractAddress:'0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c'}
 }
 
 // Default Ethereum Mainnet Remote Procedure Call providers.

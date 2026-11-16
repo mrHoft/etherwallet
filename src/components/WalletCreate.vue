@@ -62,7 +62,7 @@ import { ref, computed, watch } from 'vue'
 import Password from '~/components/Password.vue'
 import IconCopy from '~/components/ui/IconCopy.vue'
 import ButtonCancel from './ui/ButtonCancel.vue'
-import { createWallet, type WalletResult } from '~/api/create'
+import { createWallet, type WalletResult } from '~/api/ethereum/create'
 import { addWallet, hasWallet, normalizeWalletName, validateWalletName } from '~/utils/wallets'
 
 const props = defineProps<{

@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
-import { TOKEN_INFO } from './const'
+import { TOKEN_INFO } from './config'
 import { rpcProvider } from './provider'
-import { getStoredAccounts } from '../utils/accountBalance'
+import { getStoredAccounts } from '~/utils/accountBalance'
 
 const ETH_USD_CACHE_DURATION_MS = 24 * 60 * 60 * 1000
 const GAS_PRICE_CACHE_DURATION_MS = 30 * 1000

@@ -140,12 +140,12 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ethers } from 'ethers'
 import { getWallets } from '~/utils/wallets'
-import { TOKEN_INFO } from '~/api/const'
+import { TOKEN_INFO } from '~/api/ethereum/config'
 import Password from '~/components/Password.vue'
 import { formatGasPriceLabel } from '~/utils/gasPrice'
-import { ethState } from '~/api/ethState'
-import { decryptWallet } from '~/api/create'
-import { getTokenBalances } from '~/api/multicall3'
+import { ethState } from '~/api/ethereum/ethState'
+import { decryptWallet } from '~/api/ethereum/create'
+import { getTokenBalances } from '~/api/ethereum/multicall3'
 import {
   DEFAULT_SLIPPAGE_BPS,
   MAX_SLIPPAGE_BPS,
@@ -155,7 +155,7 @@ import {
   type SwapMode,
   type SwapQuote,
   type SwapStage
-} from '~/api/exchange'
+} from '~/api/ethereum/exchange'
 
 const NATIVE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
 const QUOTE_DEBOUNCE_MS = 400

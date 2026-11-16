@@ -32,7 +32,8 @@
 
 ## Conventions
 
-- `~/*` aliases to `src/*` in both Vite and `tsconfig.app.json`. `@` is not aliased.
+- `~/*` aliases to `src/*` in both Vite and `tsconfig.app.json`.
+- do not use backward imports (`../*`), use direct imports instead (`~/*`).
 - `tsconfig.app.json` enables `noUnusedLocals`, `noUnusedParameters`, and `erasableSyntaxOnly`: unused imports/vars fail the build, and `enum`, `namespace`, and constructor parameter properties are not allowed.
 - Styling uses the CSS variables in `src/style.css` (`--color00`…`--color90`, `--color-accent*`, `--border-thickness`, font vars). Light/dark is handled by the `data-theme` attribute on `<html>` (`src/utils/theme.ts`, preferences `light`/`dark`/`system`); prefer variables over hardcoded colors.
 - Wallet secrets are stored only as ethers-encrypted JSON in `localStorage` under the `EtherWallet` key via `src/utils/storage.ts`. Entries live under `wallet.<name>`, and names are normalized by replacing spaces with `_`. Never add plaintext private keys or mnemonics to storage or logs.

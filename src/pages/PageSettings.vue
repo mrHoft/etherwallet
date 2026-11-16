@@ -99,8 +99,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { resetAccountBalance } from '~/utils/accountBalance'
-import { addRpcUrl, getRpcUrls, removeRpcUrl } from '~/api/rpcUrls'
-import { rpcProvider } from '~/api/provider'
+import { addRpcUrl, getRpcUrls, removeRpcUrl } from '~/api/ethereum/rpcUrls'
+import { rpcProvider } from '~/api/ethereum/provider'
 import ButtonSquare from '~/components/ui/ButtonSquare.vue'
 import { useTheme } from '~/composables/useTheme'
 

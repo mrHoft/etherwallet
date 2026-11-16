@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { transferToken } from './transfer'; // Adjust path as needed
 import { rpcProvider } from './provider';
-import { TOKEN_INFO } from './const';
+import { TOKEN_INFO } from './config';
 
 // Mock external dependencies
 jest.mock('./provider');
@@ -11,8 +11,8 @@ jest.mock('./const', () => ({
       symbol: 'USDC',
       contractAddress: '0xUSDCAddress',
       decimals: 6,
-    },
-  },
+    }
+  }
 }));
 
 // Robust mock for ethers v6
@@ -146,7 +146,7 @@ describe('transferToken', () => {
     );
 
     expect(ethers.Contract).toHaveBeenCalledWith(
-      (TOKEN_INFO as any).USDC.contractAddress,
+      TOKEN_INFO.USDC.contractAddress,
       expect.any(Array),
       mockWallet
     );
@@ -158,7 +158,7 @@ describe('transferToken', () => {
     );
 
     const txOptions = mockWallet.sendTransaction.mock.calls[0][0];
-    expect(txOptions.to).toBe((TOKEN_INFO as any).USDC.contractAddress);
+    expect(txOptions.to).toBe(TOKEN_INFO.USDC.contractAddress);
     expect(txOptions.value).toBe(0n);
     expect(txOptions.data).toBe('0xencodeddata');
 
@@ -176,7 +176,7 @@ describe('transferToken', () => {
     );
 
     expect(ethers.Contract).toHaveBeenCalledWith(
-      (TOKEN_INFO as any).USDC.contractAddress,
+      TOKEN_INFO.USDC.contractAddress,
       expect.any(Array),
       mockWallet
     );

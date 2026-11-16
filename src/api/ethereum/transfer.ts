@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { TOKEN_INFO } from './const';
+import { TOKEN_INFO } from './config';
 import { rpcProvider } from './provider';
 
 const ERC20_ABI = [

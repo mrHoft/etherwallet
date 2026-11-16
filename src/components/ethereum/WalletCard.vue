@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import IconCopy from '~/components/ui/IconCopy.vue'
-import BalanceCard from '~/components/BalanceCard.vue';
+import BalanceCard from '~/components/ethereum/BalanceCard.vue';
 import { useNavigation } from '~/composables/useNavigation'
 
 const { navigateTo } = useNavigation()

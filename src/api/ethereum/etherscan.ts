@@ -1,4 +1,4 @@
-import { TOKEN_INFO } from './const';
+import { TOKEN_INFO, NETWORK_ID } from './config';
 
 const API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 const BASE_URL = import.meta.env.VITE_ETHERSCAN_BASE_URL;
@@ -75,7 +75,7 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
   const address = params.address.startsWith('0x') ? params.address : `0x${params.address}`
   const queryParams = new URLSearchParams({
     apikey: API_KEY,
-    chainid: '1',
+    chainid: NETWORK_ID.toString(),
     module: params.module,
     action: params.action,
     address,
@@ -110,77 +110,6 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
     console.error('Etherscan API request failed:', error);
     throw error;
   }
-}
-
-/**
- * Get native ETH balance for an address (V2)
- * @param address - Ethereum address
- * @param chainid - Chain ID (default: 1 for Ethereum mainnet)
- * @returns Balance in Wei as string
- */
-export async function getETHBalance(address: string): Promise<string> {
-  const response = await requestQueue.enqueue<{ result: string }>({
-    module: 'account',
-    action: 'balance',
-    address,
-    tag: 'latest',
-  });
-
-  return response.result;
-}
-
-/**
- * Get USDT balance for an address (V2)
- * @param address - Ethereum address
- * @param tokenAddress - contract address
- * @param chainid - Chain ID (default: 1 for Ethereum mainnet)
- * @returns Balance in USDT smallest unit (6 decimals) as string
- */
-export async function getTokenBalance(address: string, tokenSymbol: string): Promise<string> {
-  const contractaddress = TOKEN_INFO[tokenSymbol]?.contractAddress
-  if (!contractaddress) throw new Error(`Token info not found for ${tokenSymbol}`)
-
-  const response = await requestQueue.enqueue<{ result: string }>({
-    module: 'account',
-    action: 'tokenbalance',
-    contractaddress,
-    address,
-    tag: 'latest',
-  });
-
-  return response.result;
-}
-
-/**
- * Convert Wei to ETH
- * @param wei - Balance in Wei as string
- * @returns Balance in ETH as string
- */
-export function weiToEth(wei: string): string {
-  const ethValue = parseFloat(wei) / 1e18;
-  return ethValue.toString();
-}
-
-/**
- * Convert token balance from smallest unit to human-readable format
- * @param balance - Balance in smallest unit as string
- * @param decimals - Token decimals (USDT = 6)
- * @returns Balance in token units as string
- */
-export function tokenBalanceToHuman(balance: string, decimals: number = 6): string {
-  const value = parseFloat(balance) / Math.pow(10, decimals);
-  return value.toString();
-}
-
-/**
- * Format balance for display
- * @param balance - Balance as string
- * @param decimals - Number of decimal places to show
- * @returns Formatted balance string
- */
-export function formatBalance(balance: string, decimals: number = 4): string {
-  const numBalance = parseFloat(balance);
-  return numBalance.toFixed(decimals);
 }
 
 export interface TransactionRecord {

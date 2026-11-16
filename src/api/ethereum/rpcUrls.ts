@@ -1,5 +1,5 @@
-import { RPC_URLS } from './const'
-import { storage } from '../utils/storage'
+import { RPC_URLS } from './config'
+import { storage } from '~/utils/storage'
 
 const STORAGE_KEY = 'rpcUrls'
 
