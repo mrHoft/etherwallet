@@ -24,7 +24,7 @@
 ## Network and API
 
 - `src/api/const.ts` is the single source of truth for supported tokens, Chainlink feeds, the multicall3 address, RPC URLs, and `NETWORK_ID`.
-- `.env` is gitignored but required locally: `VITE_ETHERSCAN_API_KEY`, `VITE_ETHERSCAN_BASE_URL`, `VITE_APP_ENV`. Only `VITE_*` variables reach the browser via `import.meta.env`.
+- `.env` is gitignored but required locally: `VITE_ETHERSCAN_API_KEY`, `VITE_APP_ENV`. Only `VITE_*` variables reach the browser via `import.meta.env`. The Etherscan API base URL lives in `src/api/config.ts`.
 - `VITE_APP_ENV=hardhat` switches to chain id `31337`, RPC `http://127.0.0.1:8545`, and deletes all non-ETH tokens at module load. Otherwise hardcoded addresses are Ethereum mainnet.
 - `rpcProvider` (`src/api/provider.ts`) is a singleton `FallbackProvider` with a 2.5s health-check race across RPCs. Call `ensureProviderHealthy()` before multicall work, as `multicall3.ts` does.
 - Etherscan calls in `src/api/etherscan.ts` are serialized through a global queue with a ~400ms minimum delay. Don't bypass or fan out requests; the free API key is rate-limited.

@@ -54,7 +54,8 @@
             </span>
           </div>
         </div>
-        <TransactionsHistory v-if="showHistoryFor === token.symbol" :address="address" :symbol="token.symbol" />
+        <TransactionsHistory v-if="showHistoryFor === token.symbol" :address="address" :symbol="token.symbol"
+          :contract-address="token.contractAddress ?? ''" />
       </div>
 
       <div v-if="tokenBalances.length === 0 && !initialLoading" class="no-tokens">

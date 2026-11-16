@@ -67,9 +67,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { getTokenHistory, type TransactionRecord } from '~/api/ethereum/etherscan.ts'
+import { getTokenHistory, type TransactionRecord } from '~/api/etherscan'
 
-interface Props { address: string, symbol: string }
+interface Props { address: string, symbol: string, contractAddress: string }
 
 const props = defineProps<Props>()
 
@@ -80,13 +80,13 @@ const currentPage = ref(1)
 const itemsPerPage = 10
 
 const fetchTransactions = async () => {
-  if (!props.address || !props.symbol) return
+  if (!props.address || !props.symbol || !props.contractAddress) return
 
   loading.value = true
   error.value = null
 
   try {
-    const data = await getTokenHistory(props.address, props.symbol, itemsPerPage, currentPage.value)
+    const data = await getTokenHistory(props.address, props.contractAddress, itemsPerPage, currentPage.value)
     transactions.value = data
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load transactions'
@@ -151,7 +151,7 @@ const getMethod = (methodName: string): string => {
 }
 
 watch(
-  () => [props.address, props.symbol],
+  () => [props.address, props.symbol, props.contractAddress],
   () => {
     currentPage.value = 1
     fetchTransactions()

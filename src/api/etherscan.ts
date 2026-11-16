@@ -1,7 +1,23 @@
-import { TOKEN_INFO, NETWORK_ID } from './config';
+import { ETHERSCAN_BASE_URL } from '~/api/config'
+import { NETWORK_ID } from '~/api/ethereum/config'
+import { storage } from '~/utils/storage'
 
-const API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-const BASE_URL = import.meta.env.VITE_ETHERSCAN_BASE_URL;
+const ETHERSCAN_API_KEY_STORAGE_KEY = 'etherscanApiKey'
+
+const FALLBACK_ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY ?? ''
+
+export const getStoredEtherscanApiKey = (): string => {
+  const stored = storage.get<unknown>(ETHERSCAN_API_KEY_STORAGE_KEY)
+  return typeof stored === 'string' ? stored : ''
+}
+
+export const setEtherscanApiKey = (apiKey: string): void => {
+  storage.set(ETHERSCAN_API_KEY_STORAGE_KEY, apiKey.trim())
+}
+
+export const getEtherscanApiKey = (): string => {
+  return getStoredEtherscanApiKey().trim() || FALLBACK_ETHERSCAN_API_KEY
+}
 
 interface RequestParams {
   module: string;
@@ -74,7 +90,7 @@ const requestQueue = new EtherscanRequestQueue(400);
 async function etherscanRequest<T>(params: RequestParams): Promise<T> {
   const address = params.address.startsWith('0x') ? params.address : `0x${params.address}`
   const queryParams = new URLSearchParams({
-    apikey: API_KEY,
+    apikey: getEtherscanApiKey(),
     chainid: NETWORK_ID.toString(),
     module: params.module,
     action: params.action,
@@ -86,7 +102,7 @@ async function etherscanRequest<T>(params: RequestParams): Promise<T> {
     ),
   });
 
-  const url = `${BASE_URL}?${queryParams.toString()}`;
+  const url = `${ETHERSCAN_BASE_URL}?${queryParams.toString()}`;
 
   try {
     const response = await fetch(url);
@@ -135,14 +151,13 @@ export interface TransactionRecord {
   confirmations: string;    // numeric string
 }
 
-export async function getTokenHistory(address: string, tokenSymbol: string, offset = 10, page = 1): Promise<TransactionRecord[]> {
-  const contractaddress = TOKEN_INFO[tokenSymbol]?.contractAddress
-  if (!contractaddress) throw new Error(`Token info not found for ${tokenSymbol}`)
+export async function getTokenHistory(address: string, contractAddress: string, offset = 10, page = 1): Promise<TransactionRecord[]> {
+  if (!contractAddress) throw new Error('Contract address is required')
 
   const response = await requestQueue.enqueue<{ result?: TransactionRecord[] }>({
     module: 'account',
     action: 'tokentx',
-    contractaddress,
+    contractaddress: contractAddress,
     address,
     startblock: 25000000,
     sort: 'desc',
