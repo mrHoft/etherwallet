@@ -1,6 +1,9 @@
 <template>
   <SettingsSection title="Mainnet providers"
-    description="Requests are sent to these Ethereum mainnet RPC providers in the order shown. Drag the handle to change priority, or add your own endpoint.">
+    description="Requests are sent to these mainnet RPC providers in the order shown. Drag the handle to change priority, or add your own endpoint.">
+    <Tabs class="provider-tabs" :model-value="activeNetwork" :tabs="networkTabs" aria-label="Network"
+      @update:model-value="selectNetwork" />
+
     <ul v-if="providers.length" class="provider-list" @dragover.prevent @drop.prevent="handleDrop"
       @dragend="handleDragEnd">
       <li v-for="url in providers" :key="url"
@@ -31,21 +34,98 @@
         @click="handleRestoreDefaults">Restore default</button>
     </div>
 
+    <p class="provider-hint">
+      Use
+      <a :href="providerHintUrl" target="_blank" rel="noopener noreferrer">chainlist.org</a>
+      , for example, to search for new providers.
+    </p>
     <p v-if="providerError" class="provider-message provider-message--error">{{ providerError }}</p>
     <p v-else-if="providerMessage" class="provider-message">{{ providerMessage }}</p>
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { addRpcUrl, getRpcUrls, removeRpcUrl, resetRpcUrls, setRpcUrlOrder } from '~/api/ethereum/rpcUrls'
-import { rpcProvider } from '~/api/ethereum/provider'
+import { computed, ref } from 'vue'
+import { rpcProvider as ethereumProvider } from '~/api/ethereum/provider'
+import {
+  addRpcUrl as addEthereumRpcUrl,
+  getRpcUrls as getEthereumRpcUrls,
+  removeRpcUrl as removeEthereumRpcUrl,
+  resetRpcUrls as resetEthereumRpcUrls,
+  setRpcUrlOrder as setEthereumRpcUrlOrder,
+} from '~/api/ethereum/rpcUrls'
+import { rpcProvider as tronProvider } from '~/api/tron/provider'
+import {
+  addRpcUrl as addTronRpcUrl,
+  getRpcUrls as getTronRpcUrls,
+  removeRpcUrl as removeTronRpcUrl,
+  resetRpcUrls as resetTronRpcUrls,
+  setRpcUrlOrder as setTronRpcUrlOrder,
+} from '~/api/tron/rpcUrls'
 import ButtonSquare from '~/components/ui/ButtonSquare.vue'
+import Tabs from '~/components/ui/Tabs.vue'
 import SettingsSection from '~/components/settings/SettingsSection.vue'
 
 type HealthStatus = 'idle' | 'checking' | 'healthy' | 'unhealthy'
+type NetworkId = 'ethereum' | 'tron'
 
-const providers = ref<string[]>(getRpcUrls())
+interface RpcUrlActions {
+  getRpcUrls: () => string[]
+  addRpcUrl: (url: string) => string
+  removeRpcUrl: (url: string) => void
+  resetRpcUrls: () => void
+  setRpcUrlOrder: (urls: string[]) => void
+}
+
+interface ProviderActions {
+  checkProviderHealthy: (url: string) => Promise<{ healthy: boolean; latencyMs: number }>
+  resetProvider: () => void
+}
+
+interface NetworkConfig {
+  label: string
+  chainId: number
+  rpcUrls: RpcUrlActions
+  provider: ProviderActions
+}
+
+const networkIds: NetworkId[] = ['ethereum', 'tron']
+
+const networkMap: Record<NetworkId, NetworkConfig> = {
+  ethereum: {
+    label: 'Ethereum',
+    chainId: 1,
+    rpcUrls: {
+      getRpcUrls: getEthereumRpcUrls,
+      addRpcUrl: addEthereumRpcUrl,
+      removeRpcUrl: removeEthereumRpcUrl,
+      resetRpcUrls: resetEthereumRpcUrls,
+      setRpcUrlOrder: setEthereumRpcUrlOrder,
+    },
+    provider: ethereumProvider,
+  },
+  tron: {
+    label: 'Tron',
+    chainId: 728126428,
+    rpcUrls: {
+      getRpcUrls: getTronRpcUrls,
+      addRpcUrl: addTronRpcUrl,
+      removeRpcUrl: removeTronRpcUrl,
+      resetRpcUrls: resetTronRpcUrls,
+      setRpcUrlOrder: setTronRpcUrlOrder,
+    },
+    provider: tronProvider,
+  },
+}
+
+const networkTabs: { value: NetworkId; label: string }[] = networkIds.map(networkId => ({
+  value: networkId,
+  label: networkMap[networkId].label,
+}))
+
+const activeNetwork = ref<NetworkId>('ethereum')
+const network = computed(() => networkMap[activeNetwork.value])
+const providers = ref<string[]>(network.value.rpcUrls.getRpcUrls())
 const newProviderUrl = ref<string>('')
 const providerMessage = ref<string>('')
 const providerError = ref<string>('')
@@ -57,6 +137,8 @@ const didDrop = ref<boolean>(false)
 
 let checkSequence = 0
 const checkTokens = new Map<string, number>()
+
+const providerHintUrl = computed(() => `https://chainlist.org/chain/${network.value.chainId}`)
 
 const getHealthStatus = (url: string): HealthStatus => healthStatuses.value[url] ?? 'idle'
 
@@ -88,6 +170,26 @@ const latencyClass = (url: string): string => {
   if (status === 'unhealthy') return 'provider-latency--unhealthy'
 
   return ''
+}
+
+const resetNetworkState = (): void => {
+  providers.value = network.value.rpcUrls.getRpcUrls()
+  newProviderUrl.value = ''
+  providerMessage.value = ''
+  providerError.value = ''
+  healthStatuses.value = {}
+  healthLatencies.value = {}
+  draggedUrl.value = null
+  dragStartOrder.value = []
+  didDrop.value = false
+  checkTokens.clear()
+}
+
+const selectNetwork = (networkId: NetworkId): void => {
+  if (activeNetwork.value === networkId) return
+
+  activeNetwork.value = networkId
+  resetNetworkState()
 }
 
 const handleDragStart = (event: DragEvent, url: string): void => {
@@ -134,7 +236,7 @@ const handleDrop = (): void => {
   const orderChanged = providers.value.some((url, index) => url !== dragStartOrder.value[index])
   if (!orderChanged) return
 
-  setRpcUrlOrder(providers.value)
+  network.value.rpcUrls.setRpcUrlOrder(providers.value)
   providerError.value = ''
   providerMessage.value = 'Provider order updated.'
 }
@@ -161,7 +263,7 @@ const handleMoveProvider = (url: string, direction: -1 | 1): void => {
   reordered.splice(targetIndex, 0, url)
   providers.value = reordered
 
-  setRpcUrlOrder(reordered)
+  network.value.rpcUrls.setRpcUrlOrder(reordered)
   providerError.value = ''
   providerMessage.value = 'Provider order updated.'
 }
@@ -171,8 +273,8 @@ const handleAddProvider = (): void => {
   providerError.value = ''
 
   try {
-    const addedUrl = addRpcUrl(newProviderUrl.value)
-    providers.value = getRpcUrls()
+    const addedUrl = network.value.rpcUrls.addRpcUrl(newProviderUrl.value)
+    providers.value = network.value.rpcUrls.getRpcUrls()
     healthStatuses.value = { ...healthStatuses.value, [addedUrl]: 'idle' }
 
     const latencies = { ...healthLatencies.value }
@@ -181,15 +283,15 @@ const handleAddProvider = (): void => {
 
     newProviderUrl.value = ''
     providerMessage.value = 'Provider added.'
-    rpcProvider.resetProvider()
+    network.value.provider.resetProvider()
   } catch (error) {
     providerError.value = error instanceof Error ? error.message : 'Failed to add provider'
   }
 }
 
 const handleRemoveProvider = (url: string): void => {
-  removeRpcUrl(url)
-  providers.value = getRpcUrls()
+  network.value.rpcUrls.removeRpcUrl(url)
+  providers.value = network.value.rpcUrls.getRpcUrls()
 
   const statuses = { ...healthStatuses.value }
   delete statuses[url]
@@ -202,29 +304,32 @@ const handleRemoveProvider = (url: string): void => {
   checkTokens.delete(url)
   providerError.value = ''
   providerMessage.value = 'Provider removed.'
-  rpcProvider.resetProvider()
+  network.value.provider.resetProvider()
 }
 
 const handleRestoreDefaults = (): void => {
-  resetRpcUrls()
-  providers.value = getRpcUrls()
+  network.value.rpcUrls.resetRpcUrls()
+  providers.value = network.value.rpcUrls.getRpcUrls()
   healthStatuses.value = {}
   healthLatencies.value = {}
   checkTokens.clear()
   providerError.value = ''
   providerMessage.value = 'Default providers restored.'
-  rpcProvider.resetProvider()
+  network.value.provider.resetProvider()
 }
 
 const handleCheckProvider = async (url: string): Promise<void> => {
   if (isChecking(url)) return
 
+  const networkId = activeNetwork.value
+  const providerActions = network.value.provider
   const token = ++checkSequence
   checkTokens.set(url, token)
   healthStatuses.value = { ...healthStatuses.value, [url]: 'checking' }
 
-  const { healthy, latencyMs } = await rpcProvider.checkProviderHealthy(url)
+  const { healthy, latencyMs } = await providerActions.checkProviderHealthy(url)
 
+  if (activeNetwork.value !== networkId) return
   if (checkTokens.get(url) !== token || !providers.value.includes(url)) return
 
   healthStatuses.value = {
@@ -236,6 +341,10 @@ const handleCheckProvider = async (url: string): Promise<void> => {
 </script>
 
 <style scoped>
+.provider-tabs {
+  margin-bottom: 0.75rem;
+}
+
 .provider-list {
   list-style: none;
   margin: 0 0 0.25rem;
@@ -419,5 +528,13 @@ const handleCheckProvider = async (url: string): Promise<void> => {
 
 .provider-message--error {
   color: var(--color-down);
+}
+
+.provider-hint {
+  margin: 0.5rem 0 0;
+  color: var(--color70);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 </style>

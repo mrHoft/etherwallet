@@ -1,15 +1,18 @@
 <template>
-  <SettingsSection title="Etherscan" description="Used to request transaction history">
+  <SettingsSection title="Etherscan" description="Used to request transaction history.">
     <label class="api-key-label" for="etherscan-api-key">ETHERSCAN_API_KEY</label>
     <input id="etherscan-api-key" :value="apiKey" class="api-key-input" type="text" autocomplete="off"
       spellcheck="false" placeholder="Enter your Etherscan API key" @input="handleApiKeyInput" />
-    <p class="api-key-hint">Stored locally in this browser. When empty, the build-time key is used.</p>
+    <p class="api-key-hint">
+      Get your own key on
+      <a href="https://docs.etherscan.io/set-up-your-api-key" target="_blank">etherscan.io</a>
+    </p>
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { getStoredEtherscanApiKey, setEtherscanApiKey } from '~/api/config'
+import { getStoredEtherscanApiKey, setEtherscanApiKey } from '~/api/etherscan'
 import SettingsSection from '~/components/settings/SettingsSection.vue'
 
 const apiKey = ref<string>(getStoredEtherscanApiKey())

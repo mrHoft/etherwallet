@@ -31,7 +31,6 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
 // Default Ethereum Mainnet Remote Procedure Call providers.
 // Used until a custom provider list is stored in settings.
 export const RPC_URLS = [
-  // 'http://127.0.0.1:8545', // hardhat testing environment
   'https://0xrpc.io/eth',
   'https://mainnet.gateway.tenderly.co',
 ]
@@ -47,6 +46,8 @@ export const PRICE_CACHE_DURATION_MS = MAX_PRICE_AGE_SECONDS * 1000
 export const NETWORK_ID = 1
 
 export const AAVE_V3_POOL_ADDRESS = '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+
+export const LIDO_WITHDRAWAL_QUEUE_ADDRESS = '0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1'
 
 export const REBASE_TOKEN_SYMBOLS = new Set(['stETH', 'aEthUSDC'])
 

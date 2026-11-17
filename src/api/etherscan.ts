@@ -1,10 +1,11 @@
 import { ETHERSCAN_BASE_URL } from '~/api/config'
+import { env } from '~/api/env'
 import { NETWORK_ID } from '~/api/ethereum/config'
 import { storage } from '~/utils/storage'
 
 const ETHERSCAN_API_KEY_STORAGE_KEY = 'etherscanApiKey'
 
-const FALLBACK_ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY ?? ''
+const FALLBACK_ETHERSCAN_API_KEY = env.VITE_ETHERSCAN_API_KEY ?? ''
 
 export const getStoredEtherscanApiKey = (): string => {
   const stored = storage.get<unknown>(ETHERSCAN_API_KEY_STORAGE_KEY)

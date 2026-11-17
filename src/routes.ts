@@ -5,6 +5,7 @@ import PageWalletCreate from './pages/PageCreate.vue'
 import PageWallet from './pages/PageWallet.vue'
 import PageTransfer from './pages/PageTransfer.vue'
 import PageExchange from './pages/PageExchange.vue'
+import PageInterest from './pages/PageInterest.vue'
 import PageSettings from './pages/PageSettings.vue'
 import PageNotFound from './pages/PageNotFound.vue'
 import { isDecoyEnabled } from '~/utils/decoy'
@@ -23,6 +24,7 @@ export const routes: Route[] = [
   { path: withBase('/create'), component: PageWalletCreate },
   { path: withBase('/transfer'), component: PageTransfer },
   { path: withBase('/exchange'), component: PageExchange },
+  { path: withBase('/interest'), component: PageInterest },
   { path: withBase('/settings'), component: PageSettings },
   { path: '/', component: PageTipCalculator, showNavigation: false },
   { path: '/home', component: PageHome },
@@ -30,6 +32,7 @@ export const routes: Route[] = [
   { path: '/create', component: PageWalletCreate },
   { path: '/transfer', component: PageTransfer },
   { path: '/exchange', component: PageExchange },
+  { path: '/interest', component: PageInterest },
   { path: '/settings', component: PageSettings },
   { path: '**', component: PageNotFound }
 ]

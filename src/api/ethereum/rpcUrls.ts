@@ -1,7 +1,7 @@
 import { RPC_URLS } from './config'
 import { storage } from '~/utils/storage'
 
-const STORAGE_KEY = 'rpcUrls'
+const STORAGE_KEY = 'ethRpcUrls'
 
 const sanitizeUrls = (value: unknown): string[] | null => {
   if (!Array.isArray(value)) return null
