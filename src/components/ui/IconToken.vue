@@ -1,6 +1,8 @@
 <template>
   <span class="token-icon">
-    <img class="token-icon-image" :src="iconSrc" alt="" />
+    <svg class="token-icon-image" aria-hidden="true">
+      <use :href="iconHref" />
+    </svg>
   </span>
 </template>
 
@@ -9,9 +11,10 @@ import { computed } from 'vue'
 
 const props = defineProps<{ symbol: string }>()
 
-const iconSrc = computed<string>(
-  () => `${import.meta.env.BASE_URL}icons/${props.symbol.toLowerCase()}.svg`
-)
+// Public spritesheet in `public/icons.svg`; regenerate with `npm run build:icons`.
+const spritesheet = `${import.meta.env.BASE_URL}icons.svg`
+
+const iconHref = computed<string>(() => `${spritesheet}#${props.symbol.toLowerCase()}`)
 </script>
 
 <style scoped>
@@ -30,6 +33,7 @@ const iconSrc = computed<string>(
 }
 
 .token-icon-image {
+  display: block;
   width: 100%;
   height: 100%;
 }
