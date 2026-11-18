@@ -10,7 +10,6 @@ WalletBalance.vue:212 and CardBalance.vue:79 always fetch every symbol in TOKEN_
 - Add a new "Block explorer" section (as external component) to the PageSettings: base URL — https://etherscan.io/tx/ is hardcoded in TransactionsHistory.vue and PageExchange.vue.
 
 # Interest-bearing TRC-20
-Add sTRX (Liquid Staking Token), stUSDT (Interest-bearing RWA Token) to src/api/tron/config.ts TOKEN_INFO.
 Rename existed src/components/interest/Aave.vue to aEthUSDC.vue
 Create src/components/interest/stUSDT.vue based on aEthUSDC.vue. Extend src/api/aave.ts with deposit/withdraw operations for TRC-20 stUSDT token.
 Rename existed src/components/interest/Lido.vue to stETH.vue

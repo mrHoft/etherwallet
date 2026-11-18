@@ -46,7 +46,7 @@ const walletNetwork = computed<WalletNetwork>(() => {
 })
 
 const backgroundImage = computed<string>(() => {
-  const icon = walletNetwork.value === 'tron' ? 'tron.svg' : 'eth.svg'
+  const icon = walletNetwork.value === 'tron' ? 'trx.svg' : 'eth.svg'
   return `url(${withBase(`/icons/${icon}`)})`
 })
 

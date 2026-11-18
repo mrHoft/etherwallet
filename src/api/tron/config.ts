@@ -16,6 +16,20 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
     contractAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
     coingeckoId: 'tether',
   },
+  sTRX: {
+    name: 'Staked TRX',
+    symbol: 'sTRX',
+    decimals: 18,
+    contractAddress: 'TU3kjFuhtEo42tsCBtfYUAZxoqQ4yuSLQ5',
+    coingeckoId: 'staked-trx',
+  },
+  stUSDT: {
+    name: 'Staked USDT',
+    symbol: 'stUSDT',
+    decimals: 18,
+    contractAddress: 'TThzxNRLrW2Brp9DcTQU8i4Wd9udCWEdZ3',
+    coingeckoId: 'staked-usdt',
+  },
 }
 
 export const NATIVE_TOKEN_SYMBOL = 'TRX'

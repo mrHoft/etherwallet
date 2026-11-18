@@ -32,7 +32,7 @@
       <div v-for="token in tokenBalances" :key="token.symbol">
         <div class="balance-card" :class="`${token.symbol.toLowerCase()}-card`"
           @click.stop="handleShowHistory(token.symbol)">
-          <IconToken :symbol="tokenIcon(token.symbol)" />
+          <IconToken :symbol="token.symbol" />
           <div class="balance-info">
             <h3 class="token-name">{{ token.name }}</h3>
             <p class="token-symbol">{{ token.symbol }}</p>
@@ -110,10 +110,6 @@ const allTimeDelta = ref<number | null>(null)
 const activePeriod = ref<BalanceDeltaPeriod>('24h')
 const priceChanges = ref<Record<string, number>>({})
 const hasPendingFetches = computed<boolean>(() => pendingFetches.value > 0)
-
-const tokenIcon = (symbol: string): string => {
-  return symbol === NATIVE_TOKEN_SYMBOL ? 'tron' : symbol
-}
 
 const handleShowHistory = (symbol: string) => {
   showHistoryFor.value = showHistoryFor.value === symbol ? '' : symbol

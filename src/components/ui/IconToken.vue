@@ -27,7 +27,7 @@ const iconHref = computed<string>(() => `${spritesheet}#${props.symbol.toLowerCa
   align-items: center;
   justify-content: center;
   padding: 0.3rem;
-  background-color: var(--color50);
+  background-color: var(--color30);
   border-radius: 50%;
   border: var(--border-thickness) solid var(--color40);
 }

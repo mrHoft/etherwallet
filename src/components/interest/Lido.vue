@@ -5,6 +5,7 @@
         <IconToken :symbol="RECEIPT_SYMBOL" />
         <div>
           <h2 class="section-title">{{ receiptInfo.name }}</h2>
+          <span>APY/APR: {{ APY }}</span>
         </div>
       </div>
       <div class="token-balance">
@@ -143,6 +144,7 @@ interface BalanceView {
 }
 
 const RECEIPT_SYMBOL = 'stETH'
+const APY = '~2.2%'
 const receiptInfo = TOKEN_INFO[RECEIPT_SYMBOL]
 const underlyingSymbol = 'ETH'
 const underlyingInfo = TOKEN_INFO[underlyingSymbol]
