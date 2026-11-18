@@ -50,18 +50,3 @@ export const AAVE_V3_POOL_ADDRESS = '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
 export const LIDO_WITHDRAWAL_QUEUE_ADDRESS = '0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1'
 
 export const REBASE_TOKEN_SYMBOLS = new Set(['stETH', 'aEthUSDC'])
-
-/*
-const environment: 'mainnet' | 'hardhat' = import.meta.env.VITE_APP_ENV
-export const NETWORK_ID = environment === 'hardhat' ? 31337 : 1
-if (environment === 'hardhat') {
-  Object.keys(TOKEN_INFO).forEach(symbol => {
-    if (symbol !== 'ETH') {
-      delete (TOKEN_INFO[symbol])
-    }
-  })
-
-  RPC_URLS.splice(0)
-  RPC_URLS.push('http://127.0.0.1:8545')
-}
-*/

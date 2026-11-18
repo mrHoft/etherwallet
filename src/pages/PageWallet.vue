@@ -11,8 +11,9 @@
         <p v-if="renameError" class="rename-error">{{ renameError }}</p>
       </section>
 
-      <section v-if="walletData.network === 'ethereum'" class="section">
-        <WalletBalance :address="walletAddress" />
+      <section class="section">
+        <EthereumWalletBalance v-if="walletData.network === 'ethereum'" :key="walletAddress" :address="walletAddress" />
+        <TronWalletBalance v-else :key="walletAddress" :address="walletAddress" />
       </section>
 
       <section class="section">
@@ -32,7 +33,8 @@ import { getWallets, removeWallet, renameWallet, type WalletNetwork } from '~/ut
 import { getWalletAddress } from '~/utils/walletAddress'
 import WalletDelete from '~/components/WalletDelete.vue'
 import WalletCheck from '~/components/WalletCheck.vue'
-import WalletBalance from '~/components/ethereum/WalletBalance.vue'
+import EthereumWalletBalance from '~/components/ethereum/WalletBalance.vue'
+import TronWalletBalance from '~/components/tron/WalletBalance.vue'
 import WalletName from '~/components/WalletName.vue'
 import ButtonBack from '~/components/ui/ButtonBack.vue'
 import { useNavigation } from '~/composables/useNavigation'
@@ -102,7 +104,7 @@ const handleWalletNameChange = (newName: string) => {
 }
 
 onMounted(() => {
-  const addressParam = window.location.search.split('address=').pop()
+  const addressParam = new URLSearchParams(window.location.search).get('address')?.trim()
 
   if (!addressParam) {
     error.value = 'No wallet address provided'

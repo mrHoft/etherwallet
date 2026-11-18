@@ -28,22 +28,18 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue'
 import QRCode from 'qrcode'
-
-type WalletNetwork = 'ethereum' | 'tron'
+import { detectWalletNetwork } from '~/utils/walletNetwork'
+import type { WalletNetwork } from '~/utils/wallets'
 
 const ETHEREUM_ADDRESS_PATTERN = /^(?:0x)?[0-9a-fA-F]{40}$/
-const TRON_ADDRESS_PATTERN = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
 
 const isEthereumAddress = (text: string): boolean => ETHEREUM_ADDRESS_PATTERN.test(text)
-const isTronAddress = (text: string): boolean => TRON_ADDRESS_PATTERN.test(text)
 
 const normalizeAddress = (text: string): string => {
   const address = text.trim()
   if (!address.startsWith('0x') && isEthereumAddress(address)) return `0x${address}`
   return address
 }
-
-const detectNetwork = (text: string): WalletNetwork => (isTronAddress(text) ? 'tron' : 'ethereum')
 
 const isVisible = ref(false)
 const currentText = ref('')
@@ -69,7 +65,7 @@ const show = async (text: string, walletNetwork?: WalletNetwork): Promise<void> 
   }
 
   const address = normalizeAddress(text)
-  network.value = walletNetwork ?? detectNetwork(address)
+  network.value = walletNetwork ?? detectWalletNetwork(address)
   currentText.value = address
 
   isVisible.value = true

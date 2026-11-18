@@ -1,9 +1,11 @@
 <template>
-  <div class="wallet-card" :style="{ backgroundImage }" @click="navigateTo(`/wallet?address=${address}`)">
+  <div class="wallet-card" :style="{ backgroundImage }"
+    @click="navigateTo(`/wallet?address=${encodeURIComponent(address)}`)">
     <div class="card-header">
       <div>
         <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
-        <Balance v-if="walletNetwork === 'ethereum'" :address="address" />
+        <EthereumBalance v-if="walletNetwork === 'ethereum'" :address="address" />
+        <TronBalance v-else :address="address" />
       </div>
       <div class="qr-placeholder" @click.stop="showQR">
         <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -28,23 +30,24 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconCopy from '~/components/ui/IconCopy.vue'
-import Balance from '~/components/ethereum/Balance.vue';
+import EthereumBalance from '~/components/ethereum/Balance.vue'
+import TronBalance from '~/components/tron/Balance.vue'
 import { useNavigation } from '~/composables/useNavigation'
-
-type WalletNetwork = 'ethereum' | 'tron'
-
-const TRON_ADDRESS_PATTERN = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
+import { withBase } from '~/utils/path'
+import { detectWalletNetwork } from '~/utils/walletNetwork'
+import type { WalletNetwork } from '~/utils/wallets'
 
 const { navigateTo } = useNavigation()
 const props = defineProps<{ walletName: string, address: string, network?: WalletNetwork }>()
 
 const walletNetwork = computed<WalletNetwork>(() => {
   if (props.network) return props.network
-  return TRON_ADDRESS_PATTERN.test(props.address.trim()) ? 'tron' : 'ethereum'
+  return detectWalletNetwork(props.address)
 })
 
 const backgroundImage = computed<string>(() => {
-  return walletNetwork.value === 'tron' ? 'url(icons/tron.svg)' : 'url(icons/eth.svg)'
+  const icon = walletNetwork.value === 'tron' ? 'tron.svg' : 'eth.svg'
+  return `url(${withBase(`/icons/${icon}`)})`
 })
 
 const emit = defineEmits<{ showQr: [address: string] }>()

@@ -7,7 +7,7 @@
       <BalanceDeltaPeriod />
       <GasDisplay />
       <DecoySettings />
-      <EtherscanSettings />
+      <ApiKeySettings />
       <MainnetProviders />
       <ResetCache />
     </div>
@@ -15,9 +15,9 @@
 </template>
 
 <script setup lang="ts">
+import ApiKeySettings from '~/components/settings/ApiKeySettings.vue'
 import BalanceDeltaPeriod from '~/components/settings/BalanceDeltaPeriod.vue'
 import DecoySettings from '~/components/settings/DecoySettings.vue'
-import EtherscanSettings from '~/components/settings/EtherscanSettings.vue'
 import GasDisplay from '~/components/settings/GasDisplay.vue'
 import MainnetProviders from '~/components/settings/MainnetProviders.vue'
 import ResetCache from '~/components/settings/ResetCache.vue'

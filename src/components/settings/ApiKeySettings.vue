@@ -1,30 +1,68 @@
 <template>
-  <SettingsSection title="Etherscan" description="Used to request transaction history.">
-    <label class="api-key-label" for="etherscan-api-key">ETHERSCAN_API_KEY</label>
-    <input id="etherscan-api-key" :value="apiKey" class="api-key-input" type="text" autocomplete="off"
-      spellcheck="false" placeholder="Enter your Etherscan API key" @input="handleApiKeyInput" />
-    <p class="api-key-hint">
-      Get your own key on
-      <a href="https://docs.etherscan.io/set-up-your-api-key" target="_blank">etherscan.io</a>
-    </p>
+  <SettingsSection title="API keys" description="Used to request transaction history.">
+    <Tabs v-model="activeTab" :tabs="tabs" aria-label="API key provider" />
+
+    <div v-if="activeTab === 'etherscan'" class="api-key-panel">
+      <label class="api-key-label" for="etherscan-api-key">ETHERSCAN_API_KEY</label>
+      <input id="etherscan-api-key" :value="etherscanApiKey" class="api-key-input" type="text"
+        autocomplete="off" spellcheck="false" placeholder="Enter your Etherscan API key"
+        @input="handleEtherscanInput" />
+      <p class="api-key-hint">
+        Get your own key on
+        <a href="https://docs.etherscan.io/set-up-your-api-key" target="_blank"
+          rel="noopener noreferrer">etherscan.io</a>
+      </p>
+    </div>
+
+    <div v-else class="api-key-panel">
+      <label class="api-key-label" for="trongrid-api-key">TRONGRID_API_KEY</label>
+      <input id="trongrid-api-key" :value="tronGridApiKey" class="api-key-input" type="text"
+        autocomplete="off" spellcheck="false" placeholder="Enter your TronGrid API key"
+        @input="handleTronGridInput" />
+      <p class="api-key-hint">
+        Get your own key on
+        <a href="https://www.trongrid.io/" target="_blank" rel="noopener noreferrer">trongrid.io</a>
+      </p>
+    </div>
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { getStoredEtherscanApiKey, setEtherscanApiKey } from '~/api/etherscan'
+import { getStoredTronGridApiKey, setTronGridApiKey } from '~/api/tron/history'
 import SettingsSection from '~/components/settings/SettingsSection.vue'
+import Tabs from '~/components/ui/Tabs.vue'
 
-const apiKey = ref<string>(getStoredEtherscanApiKey())
+type ApiKeyProvider = 'etherscan' | 'trongrid'
 
-const handleApiKeyInput = (event: Event): void => {
+const tabs: { value: ApiKeyProvider; label: string }[] = [
+  { value: 'etherscan', label: 'Etherscan' },
+  { value: 'trongrid', label: 'TronGrid' },
+]
+
+const activeTab = ref<ApiKeyProvider>('etherscan')
+const etherscanApiKey = ref<string>(getStoredEtherscanApiKey())
+const tronGridApiKey = ref<string>(getStoredTronGridApiKey())
+
+const handleEtherscanInput = (event: Event): void => {
   const target = event.target as HTMLInputElement
-  apiKey.value = target.value
+  etherscanApiKey.value = target.value
   setEtherscanApiKey(target.value)
+}
+
+const handleTronGridInput = (event: Event): void => {
+  const target = event.target as HTMLInputElement
+  tronGridApiKey.value = target.value
+  setTronGridApiKey(target.value)
 }
 </script>
 
 <style scoped>
+.api-key-panel {
+  margin-top: 0.75rem;
+}
+
 .api-key-label {
   display: block;
   margin: 0 0 0.5rem;

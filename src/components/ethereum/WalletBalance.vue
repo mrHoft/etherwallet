@@ -451,6 +451,7 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 0.5rem;
   padding: 2rem;
   background-color: rgba(220, 38, 38, 0.1);
   border-radius: 0.5rem;
