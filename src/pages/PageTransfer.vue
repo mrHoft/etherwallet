@@ -166,7 +166,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const encryptedJson = getWallets()[selectedWallet.value]
+    const encryptedJson = getWallets()[selectedWallet.value]?.encryptedJson
 
     if (!encryptedJson) {
       errorMessage.value = 'Wallet not found'

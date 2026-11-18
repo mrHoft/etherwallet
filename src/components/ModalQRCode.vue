@@ -4,7 +4,7 @@
       <div v-if="isVisible" class="modal-overlay" @click.self="closeModal">
         <div class="modal-container">
           <div class="modal-header">
-            <h3 class="modal-title">Ethereum (ERC-20)</h3>
+            <h3 class="modal-title">{{ networkLabel }}</h3>
             <button class="modal-close" @click="closeModal" aria-label="Close modal">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,12 +26,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import QRCode from 'qrcode'
+
+type WalletNetwork = 'ethereum' | 'tron'
+
+const ETHEREUM_ADDRESS_PATTERN = /^(?:0x)?[0-9a-fA-F]{40}$/
+const TRON_ADDRESS_PATTERN = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
+
+const isEthereumAddress = (text: string): boolean => ETHEREUM_ADDRESS_PATTERN.test(text)
+const isTronAddress = (text: string): boolean => TRON_ADDRESS_PATTERN.test(text)
+
+const normalizeAddress = (text: string): string => {
+  const address = text.trim()
+  if (!address.startsWith('0x') && isEthereumAddress(address)) return `0x${address}`
+  return address
+}
+
+const detectNetwork = (text: string): WalletNetwork => (isTronAddress(text) ? 'tron' : 'ethereum')
 
 const isVisible = ref(false)
 const currentText = ref('')
+const network = ref<WalletNetwork>('ethereum')
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+
+const networkLabel = computed<string>(() =>
+  network.value === 'tron' ? 'Tron (TRC-20)' : 'Ethereum (ERC-20)'
+)
 
 const generateQRCode = async (text: string): Promise<void> => {
   if (!canvasRef.value || !text) return
@@ -41,17 +62,15 @@ const generateQRCode = async (text: string): Promise<void> => {
   await QRCode.toCanvas(canvas, text, { width: 200, margin: 0, errorCorrectionLevel: 'M' })
 }
 
-const show = async (text: string): Promise<void> => {
+const show = async (text: string, walletNetwork?: WalletNetwork): Promise<void> => {
   if (!text || text.trim() === '') {
     console.warn('Cannot show modal with empty text')
     return
   }
 
-  if (!text.startsWith('0x')) {
-    currentText.value = `0x${text}`
-  } else {
-    currentText.value = text
-  }
+  const address = normalizeAddress(text)
+  network.value = walletNetwork ?? detectNetwork(address)
+  currentText.value = address
 
   isVisible.value = true
 

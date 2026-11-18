@@ -1,6 +1,13 @@
 import { storage } from './storage'
 
-export type WalletMap = Record<string, string>
+export type WalletNetwork = 'ethereum' | 'tron'
+
+export interface StoredWallet {
+  encryptedJson: string
+  network: WalletNetwork
+}
+
+export type WalletMap = Record<string, StoredWallet>
 
 export const WALLET_NAME_MAX_LENGTH = 24
 
@@ -51,6 +58,10 @@ export const getWallets = (): WalletMap => {
   return loadWallets()
 }
 
+export const getWallet = (name: string): StoredWallet | undefined => {
+  return loadWallets()[normalizeWalletName(name)]
+}
+
 export const setWalletOrder = (orderedNames: string[]): void => {
   const wallets = loadWallets()
   const reordered: WalletMap = {}
@@ -59,8 +70,8 @@ export const setWalletOrder = (orderedNames: string[]): void => {
     if (hasOwnWallet(wallets, name)) reordered[name] = wallets[name]
   }
 
-  for (const [name, encryptedJson] of Object.entries(wallets)) {
-    if (!hasOwnWallet(reordered, name)) reordered[name] = encryptedJson
+  for (const [name, wallet] of Object.entries(wallets)) {
+    if (!hasOwnWallet(reordered, name)) reordered[name] = wallet
   }
 
   walletCache = reordered
@@ -71,7 +82,7 @@ export const hasWallet = (name: string): boolean => {
   return hasOwnWallet(loadWallets(), normalizeWalletName(name))
 }
 
-export const addWallet = (name: string, encryptedJson: string): string => {
+export const addWallet = (name: string, encryptedJson: string, network: WalletNetwork): string => {
   const validationError = validateWalletName(name)
   if (validationError) throw new Error(validationError)
 
@@ -82,7 +93,7 @@ export const addWallet = (name: string, encryptedJson: string): string => {
     throw new Error(`A wallet named "${walletName}" already exists`)
   }
 
-  wallets[walletName] = encryptedJson
+  wallets[walletName] = { encryptedJson, network }
   persistWallets(wallets)
 
   return walletName

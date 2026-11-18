@@ -180,7 +180,7 @@ const getAddressFromJson = (encryptedJson: string): string => {
 }
 
 const walletAddress = computed<string>(() => {
-  const encryptedJson = getWallets()[selectedWallet.value]
+  const encryptedJson = getWallets()[selectedWallet.value]?.encryptedJson
   return encryptedJson ? getAddressFromJson(encryptedJson) : ''
 })
 
@@ -402,7 +402,7 @@ const handleSubmit = async (): Promise<void> => {
 
   if (!isFormValid.value) return
 
-  const encryptedJson = getWallets()[selectedWallet.value]
+  const encryptedJson = getWallets()[selectedWallet.value]?.encryptedJson
 
   if (!encryptedJson) {
     errorMessage.value = 'Wallet not found'

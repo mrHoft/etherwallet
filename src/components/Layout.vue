@@ -1,6 +1,5 @@
 <template>
   <main class="main" :class="{ 'main--no-navigation': !showNavigation }">
-    <div class="bg"></div>
     <slot />
   </main>
   <Navigation v-if="showNavigation" />
@@ -15,22 +14,22 @@ withDefaults(defineProps<{ showNavigation?: boolean }>(), { showNavigation: true
 <style scoped>
 .main {
   position: relative;
-  height: calc(100vh - 4rem);
+  min-height: calc(100vh - 4rem);
+  isolation: isolate;
+}
+
+.main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url(/images/bg.svg);
+  filter: invert(var(--color-scheme)) opacity(0.1);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .main--no-navigation {
-  height: 100vh;
-}
-
-.bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background-image: url(/images/bg.svg);
-  filter: invert(var(--color-scheme)) opacity(0.05);
-  z-index: -1;
+  min-height: unset;
 }
 
 .main>* {

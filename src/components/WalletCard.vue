@@ -1,9 +1,9 @@
 <template>
-  <div class="wallet-card" @click="navigateTo(`/wallet?address=${address}`)">
+  <div class="wallet-card" :style="{ backgroundImage }" @click="navigateTo(`/wallet?address=${address}`)">
     <div class="card-header">
       <div>
         <h3 class="wallet-title">{{ formatWalletName(walletName) }}</h3>
-        <BalanceCard :address="address" />
+        <Balance v-if="walletNetwork === 'ethereum'" :address="address" />
       </div>
       <div class="qr-placeholder" @click.stop="showQR">
         <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -26,12 +26,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import IconCopy from '~/components/ui/IconCopy.vue'
-import BalanceCard from '~/components/ethereum/BalanceCard.vue';
+import Balance from '~/components/ethereum/Balance.vue';
 import { useNavigation } from '~/composables/useNavigation'
 
+type WalletNetwork = 'ethereum' | 'tron'
+
+const TRON_ADDRESS_PATTERN = /^T[1-9A-HJ-NP-Za-km-z]{33}$/
+
 const { navigateTo } = useNavigation()
-const props = defineProps<{ walletName: string, address: string }>()
+const props = defineProps<{ walletName: string, address: string, network?: WalletNetwork }>()
+
+const walletNetwork = computed<WalletNetwork>(() => {
+  if (props.network) return props.network
+  return TRON_ADDRESS_PATTERN.test(props.address.trim()) ? 'tron' : 'ethereum'
+})
+
+const backgroundImage = computed<string>(() => {
+  return walletNetwork.value === 'tron' ? 'url(icons/tron.svg)' : 'url(icons/eth.svg)'
+})
 
 const emit = defineEmits<{ showQr: [address: string] }>()
 
@@ -56,7 +70,6 @@ const formatAddress = (address: string): string => {
 .wallet-card {
   width: 300px;
   aspect-ratio: 1.75;
-  /* background: linear-gradient(135deg, var(--color10) 0%, var(--color20) 100%); */
   border-radius: 1rem;
   padding: 1.5rem;
   border: var(--border-thickness) solid var(--color40);
@@ -68,8 +81,7 @@ const formatAddress = (address: string): string => {
   flex-direction: column;
   justify-content: space-between;
   background-color: var(--color20);
-  background-image: url(/icons/eth.svg);
-  background-size: 50%;
+  background-size: 45%;
   background-blend-mode: soft-light;
   background-repeat: no-repeat;
   background-position: 10% center;
@@ -96,7 +108,6 @@ const formatAddress = (address: string): string => {
 }
 
 .wallet-card:hover {
-  /* transform: translateY(-4px); */
   border-color: var(--color-accent60);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
 }

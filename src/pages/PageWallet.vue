@@ -11,7 +11,7 @@
         <p v-if="renameError" class="rename-error">{{ renameError }}</p>
       </section>
 
-      <section class="section">
+      <section v-if="walletData.network === 'ethereum'" class="section">
         <WalletBalance :address="walletAddress" />
       </section>
 
@@ -28,7 +28,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getWallets, removeWallet, renameWallet } from '~/utils/wallets'
+import { getWallets, removeWallet, renameWallet, type WalletNetwork } from '~/utils/wallets'
+import { getWalletAddress } from '~/utils/walletAddress'
 import WalletDelete from '~/components/WalletDelete.vue'
 import WalletCheck from '~/components/WalletCheck.vue'
 import WalletBalance from '~/components/ethereum/WalletBalance.vue'
@@ -38,14 +39,10 @@ import { useNavigation } from '~/composables/useNavigation'
 
 const { navigateTo } = useNavigation()
 
-interface WalletData {
-  address: string
-  [key: string]: unknown
-}
-
 interface WalletEntry {
   name: string
   encryptedJson: string
+  network: WalletNetwork
 }
 
 const error = ref<string>('')
@@ -53,23 +50,20 @@ const renameError = ref<string>('')
 const walletData = ref<WalletEntry | null>(null)
 const walletAddress = ref<string>('')
 
-const getAddressFromJson = (encryptedJson: string): string => {
-  try {
-    const parsedData: WalletData = JSON.parse(encryptedJson)
-    return parsedData.address || ''
-  } catch {
-    return ''
-  }
-}
-
 const findWalletByAddress = (address: string): WalletEntry | null => {
-  let normalizedAddress = address.toLowerCase()
-  if (normalizedAddress.startsWith('0x')) normalizedAddress = normalizedAddress.slice(2)
+  const query = address.trim()
 
-  for (const [name, encryptedJson] of Object.entries(getWallets())) {
-    const walletAddressFromJson = getAddressFromJson(encryptedJson)
-    if (walletAddressFromJson.toLowerCase() === normalizedAddress) {
-      return { name, encryptedJson }
+  for (const [name, wallet] of Object.entries(getWallets())) {
+    const displayAddress = getWalletAddress(wallet)
+    if (!displayAddress) continue
+
+    // Base58 addresses are case-sensitive; hex addresses are not.
+    const matches = wallet.network === 'tron'
+      ? displayAddress === query
+      : displayAddress.toLowerCase() === query.toLowerCase()
+
+    if (matches) {
+      return { name, encryptedJson: wallet.encryptedJson, network: wallet.network }
     }
   }
 
@@ -123,7 +117,7 @@ onMounted(() => {
   }
 
   walletData.value = foundWallet
-  walletAddress.value = addressParam
+  walletAddress.value = getWalletAddress(foundWallet)
 })
 </script>
 

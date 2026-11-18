@@ -5,12 +5,12 @@
         <WalletCardNew />
       </template>
       <template v-else>
-        <WalletCard v-for="([walletName, encryptedJson], index) in walletEntries" :key="walletName"
-          :class="{ 'wallet-card--dragging': draggedWalletName === walletName }"
-          :wallet-name="walletName" :address="getAddressFromJson(encryptedJson)"
+        <WalletCard v-for="([walletName, wallet], index) in walletEntries" :key="walletName"
+          :class="{ 'wallet-card--dragging': draggedWalletName === walletName }" :wallet-name="walletName"
+          :address="getWalletAddress(wallet)" :network="wallet.network"
           :style="{ animationDelay: `${index * 0.05}s` }" draggable="true"
           @dragstart="handleDragStart($event, walletName)" @dragover.prevent="handleDragOver($event, walletName)"
-          @show-qr="handleShowQR" />
+          @show-qr="handleShowQR($event, wallet.network)" />
       </template>
     </div>
     <ModalQRCode ref="modalQRRef" />
@@ -19,8 +19,9 @@
 
 <script setup lang="ts">
 import { onActivated, ref } from 'vue'
-import { getWallets, setWalletOrder } from '~/utils/wallets'
-import WalletCard from '~/components/ethereum/WalletCard.vue'
+import { getWallets, setWalletOrder, type StoredWallet, type WalletNetwork } from '~/utils/wallets'
+import { getWalletAddress } from '~/utils/walletAddress'
+import WalletCard from '~/components/WalletCard.vue'
 import WalletCardNew from '~/components/WalletCardNew.vue'
 import ModalQRCode from '~/components/ModalQRCode.vue'
 
@@ -28,30 +29,11 @@ defineOptions({ name: 'PageHome' })
 
 const modalQRRef = ref<InstanceType<typeof ModalQRCode>>()
 
-const handleShowQR = (address: string) => {
-  modalQRRef.value?.show(address)
+const handleShowQR = (address: string, network: WalletNetwork) => {
+  modalQRRef.value?.show(address, network)
 }
 
-interface WalletData {
-  address: string
-  [key: string]: unknown
-}
-
-const getAddressFromJson = (encryptedJson: string): string => {
-  try {
-    const parsedData: WalletData = JSON.parse(encryptedJson)
-    if (!parsedData.address) return ''
-    if (!parsedData.address.startsWith('0x')) {
-      return `0x${parsedData.address}`
-    }
-    return parsedData.address
-  } catch (error) {
-    console.error('Failed to parse wallet JSON:', error)
-    return ''
-  }
-}
-
-const walletEntries = ref<[string, string][]>(Object.entries(getWallets()))
+const walletEntries = ref<[string, StoredWallet][]>(Object.entries(getWallets()))
 
 const draggedWalletName = ref<string | null>(null)
 const dragStartOrder = ref<string[]>([])
