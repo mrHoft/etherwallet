@@ -1,5 +1,5 @@
 <template>
-  <section class="lido-section">
+  <section class="strx-section">
     <div class="section-header">
       <div class="token-heading">
         <IconToken :symbol="RECEIPT_SYMBOL" />
@@ -9,24 +9,24 @@
         </div>
       </div>
       <div class="token-balance">
-        <span v-if="stethBalance" class="balance-value">{{ stethBalance.text }}</span>
+        <span v-if="strxBalance" class="balance-value">{{ strxBalance.text }}</span>
         <span v-else-if="balanceLoading" class="balance-value">...</span>
         <span v-else class="balance-value">0</span>
         <span class="balance-unit">{{ RECEIPT_SYMBOL }}</span>
       </div>
     </div>
 
-    <form class="lido-form" @submit.prevent="handleSubmit">
+    <form class="strx-form" @submit.prevent="handleSubmit">
       <div class="form-group">
-        <label class="form-label" for="lido-wallet">Wallet</label>
-        <select id="lido-wallet" v-model="selectedWallet" class="form-select" :disabled="isSubmitting" required>
+        <label class="form-label" for="strx-wallet">Wallet</label>
+        <select id="strx-wallet" v-model="selectedWallet" class="form-select" :disabled="isSubmitting" required>
           <option value="" disabled>Select a wallet</option>
           <option v-for="[key] in walletEntries" :key="key" :value="key">
             {{ key }}
           </option>
         </select>
         <p v-if="walletEntries.length === 0" class="field-hint">
-          No wallets found. Create a wallet before using Lido.
+          No Tron wallets found. Create a wallet before using sTRX.
         </p>
       </div>
 
@@ -35,7 +35,7 @@
       <div v-if="activeTab === 'deposit'" class="tab-panel">
         <div class="form-group">
           <div class="amount-header">
-            <label class="form-label" for="deposit-amount">Amount ({{ underlyingSymbol }})</label>
+            <label class="form-label" for="strx-deposit-amount">Amount ({{ underlyingSymbol }})</label>
             <span class="amount-balance">
               Balance:
               <span v-if="underlyingBalance">{{ underlyingBalance.text }}</span>
@@ -47,7 +47,7 @@
               </button>
             </span>
           </div>
-          <input id="deposit-amount" v-model="depositAmount" type="text" inputmode="decimal" class="form-input"
+          <input id="strx-deposit-amount" v-model="depositAmount" type="text" inputmode="decimal" class="form-input"
             placeholder="0.0000" :disabled="isSubmitting" required />
         </div>
 
@@ -56,30 +56,27 @@
           Insufficient {{ underlyingSymbol }} balance.
         </p>
 
-        <div class="estimate">
-          <div class="quote-row">
-            <span>Estimated {{ RECEIPT_SYMBOL }} received</span>
-            <span class="quote-value">{{ estimatedReceipt || '—' }}</span>
-          </div>
-        </div>
+        <p class="field-hint">
+          sTRX is minted at the protocol exchange rate, so the received amount differs from the deposited TRX.
+        </p>
       </div>
 
       <div v-else class="tab-panel">
         <div class="form-group">
           <div class="amount-header">
-            <label class="form-label" for="withdraw-amount">Amount ({{ RECEIPT_SYMBOL }})</label>
+            <label class="form-label" for="strx-withdraw-amount">Amount ({{ RECEIPT_SYMBOL }})</label>
             <span class="amount-balance">
               Balance:
-              <span v-if="stethBalance">{{ stethBalance.text }}</span>
+              <span v-if="strxBalance">{{ strxBalance.text }}</span>
               <span v-else-if="balanceLoading">...</span>
               <span v-else>0</span>
-              <button v-if="stethBalance" type="button" class="max-button" :disabled="isSubmitting"
+              <button v-if="strxBalance" type="button" class="max-button" :disabled="isSubmitting"
                 @click="applyWithdrawMax">
                 MAX
               </button>
             </span>
           </div>
-          <input id="withdraw-amount" :value="withdrawAmount" type="text" inputmode="decimal" class="form-input"
+          <input id="strx-withdraw-amount" :value="withdrawAmount" type="text" inputmode="decimal" class="form-input"
             placeholder="0.0000" :disabled="isSubmitting" required @input="handleWithdrawInput" />
         </div>
 
@@ -88,13 +85,13 @@
           Insufficient {{ RECEIPT_SYMBOL }} balance.
         </p>
         <p class="field-hint">
-          Withdrawal requests are queued. ETH is claimable after Lido finalizes the request.
+          Withdrawal requests are queued. TRX is claimable after sTRX finalizes the request.
         </p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="lido-password">Password</label>
-        <Password id="lido-password" ref="passwordRef" v-model="password" />
+        <label class="form-label" for="strx-password">Password</label>
+        <Password id="strx-password" ref="passwordRef" v-model="password" />
       </div>
 
       <button type="submit" class="submit-button" :disabled="!isFormValid || isSubmitting">
@@ -107,13 +104,8 @@
 
       <div v-if="successMessage" class="success-message">
         {{ successMessage }}
-        <a v-if="successTxHash" :href="`https://etherscan.io/tx/${successTxHash}`" target="_blank"
+        <a v-if="successTxHash" :href="`${EXPLORER_TX_URL}${successTxHash}`" target="_blank"
           rel="noopener noreferrer">View transaction</a>
-        <span v-if="successApprovalTxHash">
-          ·
-          <a :href="`https://etherscan.io/tx/${successApprovalTxHash}`" target="_blank"
-            rel="noopener noreferrer">Approval transaction</a>
-        </span>
       </div>
     </form>
   </section>
@@ -125,17 +117,18 @@ import { formatUnits, parseUnits } from 'ethers'
 import IconToken from '~/components/ui/IconToken.vue'
 import Password from '~/components/ui/Password.vue'
 import Tabs from '~/components/ui/Tabs.vue'
-import { TOKEN_INFO } from '~/api/ethereum/config'
-import { getTokenBalances } from '~/api/ethereum/multicall3'
+import { TOKEN_INFO } from '~/api/tron/config'
+import { getTokenBalances } from '~/api/tron/balances'
 import { decryptWallet } from '~/api/ethereum/create'
 import { getWallets } from '~/utils/wallets'
-import { deposit, withdraw, getMaxStakeAmount, type LidoStage } from '~/api/lido'
+import { getWalletAddress } from '~/utils/walletAddress'
+import { deposit, withdraw, type STRXStage } from '~/api/tron/sTRX'
 
 type Tab = 'deposit' | 'withdraw'
 
 const tabOptions: { value: Tab; label: string }[] = [
-  { value: 'deposit', label: 'Deposit' },
-  { value: 'withdraw', label: 'Withdraw' },
+  { value: 'deposit', label: 'Stake' },
+  { value: 'withdraw', label: 'Request withdrawal' },
 ]
 
 interface BalanceView {
@@ -143,14 +136,15 @@ interface BalanceView {
   text: string
 }
 
-const RECEIPT_SYMBOL = 'stETH'
-const APY = '~2.2%'
+const RECEIPT_SYMBOL = 'sTRX'
+const APY = '~4.6%'
+const EXPLORER_TX_URL = 'https://tronscan.org/#/transaction/'
 const receiptInfo = TOKEN_INFO[RECEIPT_SYMBOL]
-const underlyingSymbol = 'ETH'
+const underlyingSymbol = 'TRX'
 const underlyingInfo = TOKEN_INFO[underlyingSymbol]
 
 const wallets = getWallets()
-const walletEntries = Object.entries(wallets)
+const walletEntries = Object.entries(wallets).filter(([, wallet]) => wallet.network === 'tron')
 
 const selectedWallet = ref<string>('')
 const password = ref<string>('')
@@ -160,11 +154,10 @@ const depositAmount = ref<string>('')
 const withdrawAmount = ref<string>('')
 const withdrawAll = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
-const stage = ref<LidoStage | ''>('')
+const stage = ref<STRXStage | ''>('')
 const errorMessage = ref<string>('')
 const successMessage = ref<string>('')
 const successTxHash = ref<string>('')
-const successApprovalTxHash = ref<string>('')
 const balances = ref<Record<string, { raw: string; formatted: string }>>({})
 const balanceLoading = ref<boolean>(false)
 
@@ -185,8 +178,8 @@ const getAddressFromJson = (encryptedJson: string): string => {
 }
 
 const walletAddress = computed<string>(() => {
-  const encryptedJson = getWallets()[selectedWallet.value]?.encryptedJson
-  return encryptedJson ? getAddressFromJson(encryptedJson) : ''
+  const wallet = getWallets()[selectedWallet.value]
+  return wallet ? getWalletAddress(wallet) : ''
 })
 
 const formatTokenAmount = (raw: string | bigint, decimals: number, maxFractionDigits = 6): string => {
@@ -224,7 +217,7 @@ const getBalance = (symbol: string): BalanceView | null => {
   }
 }
 
-const stethBalance = computed(() => getBalance(RECEIPT_SYMBOL))
+const strxBalance = computed(() => getBalance(RECEIPT_SYMBOL))
 const underlyingBalance = computed(() => getBalance(underlyingSymbol))
 
 const loadBalances = async (): Promise<void> => {
@@ -258,7 +251,7 @@ const loadBalances = async (): Promise<void> => {
     balances.value = nextBalances
   } catch (error) {
     if (sequence === balanceSequence) {
-      console.error('Failed to load Lido balances:', error)
+      console.error('Failed to load sTRX balances:', error)
     }
   } finally {
     if (sequence === balanceSequence) {
@@ -311,16 +304,10 @@ const requiredAmount = computed<bigint | null>(() => {
 const insufficientBalance = computed<boolean>(() => {
   if (requiredAmount.value === null) return false
 
-  const balance = activeTab.value === 'deposit' ? underlyingBalance.value : stethBalance.value
+  const balance = activeTab.value === 'deposit' ? underlyingBalance.value : strxBalance.value
   if (!balance) return false
 
   return requiredAmount.value > balance.raw
-})
-
-const estimatedReceipt = computed<string>(() => {
-  if (activeTab.value !== 'deposit' || requiredAmount.value === null) return ''
-
-  return `${formatExactAmount(requiredAmount.value, receiptInfo.decimals)} ${RECEIPT_SYMBOL}`
 })
 
 const isFormValid = computed<boolean>(() =>
@@ -337,14 +324,12 @@ const submitLabel = computed<string>(() => {
   }
 
   switch (stage.value) {
-    case 'staking':
+    case 'depositing':
       return 'Staking...'
-    case 'approving':
-      return `Approving ${RECEIPT_SYMBOL}...`
-    case 'waitingApproval':
-      return 'Waiting for approval...'
-    case 'requestingWithdrawal':
+    case 'withdrawing':
       return 'Requesting withdrawal...'
+    case 'claiming':
+      return 'Claiming...'
     case 'waitingConfirmation':
       return 'Waiting for confirmation...'
     default:
@@ -359,24 +344,17 @@ const switchTab = (tab: Tab): void => {
   errorMessage.value = ''
   successMessage.value = ''
   successTxHash.value = ''
-  successApprovalTxHash.value = ''
 }
 
-const applyDepositMax = async (): Promise<void> => {
-  if (!walletAddress.value) return
+const applyDepositMax = (): void => {
+  const balance = underlyingBalance.value
+  if (!balance) return
 
-  try {
-    const maxAmount = await getMaxStakeAmount(walletAddress.value)
-    if (maxAmount <= 0n) return
-
-    depositAmount.value = formatExactAmount(maxAmount, underlyingInfo.decimals)
-  } catch (error) {
-    console.error('Failed to calculate max stake amount:', error)
-  }
+  depositAmount.value = formatExactAmount(balance.raw, underlyingInfo.decimals)
 }
 
 const applyWithdrawMax = (): void => {
-  const balance = stethBalance.value
+  const balance = strxBalance.value
   if (!balance) return
 
   withdrawAmount.value = formatExactAmount(balance.raw, receiptInfo.decimals)
@@ -409,7 +387,6 @@ const handleSubmit = async (): Promise<void> => {
   errorMessage.value = ''
   successMessage.value = ''
   successTxHash.value = ''
-  successApprovalTxHash.value = ''
 
   if (!isFormValid.value) return
 
@@ -449,9 +426,8 @@ const handleSubmit = async (): Promise<void> => {
 
     successMessage.value = action === 'deposit'
       ? 'Stake complete.'
-      : 'Withdrawal request submitted. ETH is claimable once Lido finalizes the request.'
-    successTxHash.value = result.txHash
-    successApprovalTxHash.value = result.approvalTxHash ?? ''
+      : 'Withdrawal request submitted. TRX is claimable once sTRX finalizes the request.'
+    successTxHash.value = result.txId
 
     passwordRef.value?.clear()
 
@@ -477,7 +453,7 @@ watch(selectedWallet, () => {
 </script>
 
 <style scoped>
-.lido-section {
+.strx-section {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -509,13 +485,6 @@ watch(selectedWallet, () => {
   margin: 0 0 0.2rem;
 }
 
-.token-symbol {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--color70);
-  margin: 0;
-}
-
 .token-balance {
   display: flex;
   column-gap: 0.5rem;
@@ -534,7 +503,7 @@ watch(selectedWallet, () => {
   color: var(--color70);
 }
 
-.lido-form {
+.strx-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -634,30 +603,6 @@ watch(selectedWallet, () => {
 .max-button:disabled {
   opacity: 0.5;
   cursor: default;
-}
-
-.estimate {
-  padding: 0.75rem;
-  background-color: var(--color10);
-  border: var(--border-thickness) solid var(--color40);
-  border-radius: 0.5rem;
-  font-family: var(--sans);
-  font-size: 0.8rem;
-}
-
-.quote-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--color70);
-}
-
-.quote-value {
-  color: var(--color90);
-  font-family: var(--mono);
-  text-align: right;
-  word-break: break-word;
 }
 
 .submit-button {

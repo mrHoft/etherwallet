@@ -1,5 +1,5 @@
 <template>
-  <section class="aave-section">
+  <section class="steth-section">
     <div class="section-header">
       <div class="token-heading">
         <IconToken :symbol="RECEIPT_SYMBOL" />
@@ -9,24 +9,24 @@
         </div>
       </div>
       <div class="token-balance">
-        <span v-if="aethusdcBalance" class="balance-value">{{ aethusdcBalance.text }}</span>
+        <span v-if="stethBalance" class="balance-value">{{ stethBalance.text }}</span>
         <span v-else-if="balanceLoading" class="balance-value">...</span>
         <span v-else class="balance-value">0</span>
         <span class="balance-unit">{{ RECEIPT_SYMBOL }}</span>
       </div>
     </div>
 
-    <form class="aave-form" @submit.prevent="handleSubmit">
+    <form class="steth-form" @submit.prevent="handleSubmit">
       <div class="form-group">
-        <label class="form-label" for="aave-wallet">Wallet</label>
-        <select id="aave-wallet" v-model="selectedWallet" class="form-select" :disabled="isSubmitting" required>
+        <label class="form-label" for="steth-wallet">Wallet</label>
+        <select id="steth-wallet" v-model="selectedWallet" class="form-select" :disabled="isSubmitting" required>
           <option value="" disabled>Select a wallet</option>
           <option v-for="[key] in walletEntries" :key="key" :value="key">
             {{ key }}
           </option>
         </select>
         <p v-if="walletEntries.length === 0" class="field-hint">
-          No wallets found. Create a wallet before using Aave.
+          No wallets found. Create a wallet before using Lido.
         </p>
       </div>
 
@@ -35,7 +35,7 @@
       <div v-if="activeTab === 'deposit'" class="tab-panel">
         <div class="form-group">
           <div class="amount-header">
-            <label class="form-label" for="deposit-amount">Amount ({{ underlyingSymbol }})</label>
+            <label class="form-label" for="steth-deposit-amount">Amount ({{ underlyingSymbol }})</label>
             <span class="amount-balance">
               Balance:
               <span v-if="underlyingBalance">{{ underlyingBalance.text }}</span>
@@ -47,7 +47,7 @@
               </button>
             </span>
           </div>
-          <input id="deposit-amount" v-model="depositAmount" type="text" inputmode="decimal" class="form-input"
+          <input id="steth-deposit-amount" v-model="depositAmount" type="text" inputmode="decimal" class="form-input"
             placeholder="0.0000" :disabled="isSubmitting" required />
         </div>
 
@@ -67,19 +67,19 @@
       <div v-else class="tab-panel">
         <div class="form-group">
           <div class="amount-header">
-            <label class="form-label" for="withdraw-amount">Amount ({{ RECEIPT_SYMBOL }})</label>
+            <label class="form-label" for="steth-withdraw-amount">Amount ({{ RECEIPT_SYMBOL }})</label>
             <span class="amount-balance">
               Balance:
-              <span v-if="aethusdcBalance">{{ aethusdcBalance.text }}</span>
+              <span v-if="stethBalance">{{ stethBalance.text }}</span>
               <span v-else-if="balanceLoading">...</span>
               <span v-else>0</span>
-              <button v-if="aethusdcBalance" type="button" class="max-button" :disabled="isSubmitting"
+              <button v-if="stethBalance" type="button" class="max-button" :disabled="isSubmitting"
                 @click="applyWithdrawMax">
                 MAX
               </button>
             </span>
           </div>
-          <input id="withdraw-amount" :value="withdrawAmount" type="text" inputmode="decimal" class="form-input"
+          <input id="steth-withdraw-amount" :value="withdrawAmount" type="text" inputmode="decimal" class="form-input"
             placeholder="0.0000" :disabled="isSubmitting" required @input="handleWithdrawInput" />
         </div>
 
@@ -87,11 +87,14 @@
         <p v-else-if="insufficientBalance" class="field-error">
           Insufficient {{ RECEIPT_SYMBOL }} balance.
         </p>
+        <p class="field-hint">
+          Withdrawal requests are queued. ETH is claimable after Lido finalizes the request.
+        </p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="aave-password">Password</label>
-        <Password id="aave-password" ref="passwordRef" v-model="password" />
+        <label class="form-label" for="steth-password">Password</label>
+        <Password id="steth-password" ref="passwordRef" v-model="password" />
       </div>
 
       <button type="submit" class="submit-button" :disabled="!isFormValid || isSubmitting">
@@ -126,7 +129,7 @@ import { TOKEN_INFO } from '~/api/ethereum/config'
 import { getTokenBalances } from '~/api/ethereum/multicall3'
 import { decryptWallet } from '~/api/ethereum/create'
 import { getWallets } from '~/utils/wallets'
-import { deposit, withdraw, type AaveStage } from '~/api/aave'
+import { deposit, withdraw, getMaxStakeAmount, type LidoStage } from '~/api/ethereum/stETH'
 
 type Tab = 'deposit' | 'withdraw'
 
@@ -140,14 +143,14 @@ interface BalanceView {
   text: string
 }
 
-const RECEIPT_SYMBOL = 'aEthUSDC'
-const APY = '~4.1%'
+const RECEIPT_SYMBOL = 'stETH'
+const APY = '~2.2%'
 const receiptInfo = TOKEN_INFO[RECEIPT_SYMBOL]
-const underlyingSymbol = receiptInfo.interestBearing?.underlying ?? 'USDC'
+const underlyingSymbol = 'ETH'
 const underlyingInfo = TOKEN_INFO[underlyingSymbol]
 
 const wallets = getWallets()
-const walletEntries = Object.entries(wallets)
+const walletEntries = Object.entries(wallets).filter(([, wallet]) => wallet.network !== 'tron')
 
 const selectedWallet = ref<string>('')
 const password = ref<string>('')
@@ -157,7 +160,7 @@ const depositAmount = ref<string>('')
 const withdrawAmount = ref<string>('')
 const withdrawAll = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
-const stage = ref<AaveStage | ''>('')
+const stage = ref<LidoStage | ''>('')
 const errorMessage = ref<string>('')
 const successMessage = ref<string>('')
 const successTxHash = ref<string>('')
@@ -221,7 +224,7 @@ const getBalance = (symbol: string): BalanceView | null => {
   }
 }
 
-const aethusdcBalance = computed(() => getBalance(RECEIPT_SYMBOL))
+const stethBalance = computed(() => getBalance(RECEIPT_SYMBOL))
 const underlyingBalance = computed(() => getBalance(underlyingSymbol))
 
 const loadBalances = async (): Promise<void> => {
@@ -255,7 +258,7 @@ const loadBalances = async (): Promise<void> => {
     balances.value = nextBalances
   } catch (error) {
     if (sequence === balanceSequence) {
-      console.error('Failed to load Aave balances:', error)
+      console.error('Failed to load Lido balances:', error)
     }
   } finally {
     if (sequence === balanceSequence) {
@@ -308,7 +311,7 @@ const requiredAmount = computed<bigint | null>(() => {
 const insufficientBalance = computed<boolean>(() => {
   if (requiredAmount.value === null) return false
 
-  const balance = activeTab.value === 'deposit' ? underlyingBalance.value : aethusdcBalance.value
+  const balance = activeTab.value === 'deposit' ? underlyingBalance.value : stethBalance.value
   if (!balance) return false
 
   return requiredAmount.value > balance.raw
@@ -330,18 +333,18 @@ const isFormValid = computed<boolean>(() =>
 
 const submitLabel = computed<string>(() => {
   if (!isSubmitting.value) {
-    return activeTab.value === 'deposit' ? 'Deposit' : 'Withdraw'
+    return activeTab.value === 'deposit' ? 'Stake' : 'Request withdrawal'
   }
 
   switch (stage.value) {
+    case 'staking':
+      return 'Staking...'
     case 'approving':
-      return `Approving ${underlyingSymbol}...`
+      return `Approving ${RECEIPT_SYMBOL}...`
     case 'waitingApproval':
       return 'Waiting for approval...'
-    case 'supplying':
-      return 'Supplying...'
-    case 'withdrawing':
-      return 'Withdrawing...'
+    case 'requestingWithdrawal':
+      return 'Requesting withdrawal...'
     case 'waitingConfirmation':
       return 'Waiting for confirmation...'
     default:
@@ -359,15 +362,21 @@ const switchTab = (tab: Tab): void => {
   successApprovalTxHash.value = ''
 }
 
-const applyDepositMax = (): void => {
-  const balance = underlyingBalance.value
-  if (!balance) return
+const applyDepositMax = async (): Promise<void> => {
+  if (!walletAddress.value) return
 
-  depositAmount.value = formatExactAmount(balance.raw, underlyingInfo.decimals)
+  try {
+    const maxAmount = await getMaxStakeAmount(walletAddress.value)
+    if (maxAmount <= 0n) return
+
+    depositAmount.value = formatExactAmount(maxAmount, underlyingInfo.decimals)
+  } catch (error) {
+    console.error('Failed to calculate max stake amount:', error)
+  }
 }
 
 const applyWithdrawMax = (): void => {
-  const balance = aethusdcBalance.value
+  const balance = stethBalance.value
   if (!balance) return
 
   withdrawAmount.value = formatExactAmount(balance.raw, receiptInfo.decimals)
@@ -423,14 +432,13 @@ const handleSubmit = async (): Promise<void> => {
     }
 
     const result = action === 'deposit'
-      ? await deposit(privateKey, RECEIPT_SYMBOL, depositAmount.value.trim(), {
+      ? await deposit(privateKey, depositAmount.value.trim(), {
         onStage: nextStage => {
           stage.value = nextStage
         },
       })
       : await withdraw(
         privateKey,
-        RECEIPT_SYMBOL,
         withdrawAll.value ? 'max' : withdrawAmount.value.trim(),
         {
           onStage: nextStage => {
@@ -439,7 +447,9 @@ const handleSubmit = async (): Promise<void> => {
         }
       )
 
-    successMessage.value = action === 'deposit' ? 'Deposit complete.' : 'Withdrawal complete.'
+    successMessage.value = action === 'deposit'
+      ? 'Stake complete.'
+      : 'Withdrawal request submitted. ETH is claimable once Lido finalizes the request.'
     successTxHash.value = result.txHash
     successApprovalTxHash.value = result.approvalTxHash ?? ''
 
@@ -467,7 +477,7 @@ watch(selectedWallet, () => {
 </script>
 
 <style scoped>
-.aave-section {
+.steth-section {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -524,7 +534,7 @@ watch(selectedWallet, () => {
   color: var(--color70);
 }
 
-.aave-form {
+.steth-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;

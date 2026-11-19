@@ -34,6 +34,13 @@ export const TOKEN_INFO: Record<string, TokenInfo> = {
 
 export const NATIVE_TOKEN_SYMBOL = 'TRX'
 
+// stUSDT deposits are handled by the MinterProxy, while unstaking requests go
+// through the UnstUSDTProxy. Both are part of the stUSDT staking protocol and
+// are separate from the stUSDT TRC-20 token contract above.
+export const STUSDT_MINTER_ADDRESS = 'TVh1PF9xr4zC5uAqRcCbxF1By6ucp95G4i'
+
+export const STUSDT_UNSTAKING_ADDRESS = 'TURYwFtG6gvpEyPSm55FyjJWpgQQ2rDm5e'
+
 export const PRICE_CACHE_DURATION_MS = 5 * 60 * 1000
 
 export const TRONGRID_BASE_URL = 'https://api.trongrid.io'

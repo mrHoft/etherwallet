@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { deposit, getMaxStakeAmount, withdraw } from '~/api/lido'
+import { deposit, getMaxStakeAmount, withdraw } from '~/api/ethereum/stETH'
 import { rpcProvider } from '~/api/ethereum/provider'
 import { transferToken } from '~/api/ethereum/transfer'
 

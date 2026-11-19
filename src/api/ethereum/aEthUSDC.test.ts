@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { deposit, withdraw } from '~/api/aave'
+import { deposit, withdraw } from '~/api/ethereum/aEthUSDC'
 import { rpcProvider } from '~/api/ethereum/provider'
 
 const POOL_ADDRESS = '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2'

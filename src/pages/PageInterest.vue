@@ -2,15 +2,35 @@
   <div class="page-interest">
     <div class="container">
       <h1 class="page-title">Interest-bearing</h1>
-      <Aave />
-      <Lido />
+      <Tabs v-model="activeNetwork" :tabs="tabs" aria-label="Network" />
+      <template v-if="activeNetwork === 'ethereum'">
+        <StETH />
+        <AEthUSDC />
+      </template>
+      <template v-else>
+        <STRX />
+        <StUSDT />
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Aave from '~/components/interest/Aave.vue'
-import Lido from '~/components/interest/Lido.vue'
+import { ref } from 'vue'
+import StETH from '~/components/interest/stETH.vue'
+import AEthUSDC from '~/components/interest/aEthUSDC.vue'
+import STRX from '~/components/interest/sTRX.vue'
+import StUSDT from '~/components/interest/stUSDT.vue'
+import Tabs from '~/components/ui/Tabs.vue'
+
+type InterestNetwork = 'ethereum' | 'tron'
+
+const tabs: { value: InterestNetwork; label: string }[] = [
+  { value: 'ethereum', label: 'Ethereum' },
+  { value: 'tron', label: 'Tron' },
+]
+
+const activeNetwork = ref<InterestNetwork>('ethereum')
 </script>
 
 <style scoped>
