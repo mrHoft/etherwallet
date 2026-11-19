@@ -10,26 +10,22 @@
 import { computed } from 'vue'
 
 const props = defineProps<{ symbol: string }>()
-
-// Public spritesheet in `public/icons.svg`; regenerate with `npm run build:icons`.
 const spritesheet = `${import.meta.env.BASE_URL}icons.svg`
-
 const iconHref = computed<string>(() => `${spritesheet}#${props.symbol.toLowerCase()}`)
 </script>
 
 <style scoped>
 .token-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   box-sizing: border-box;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem;
-  background-color: var(--color30);
+  padding: 4px;
+  background-color: var(--color40);
   border-radius: 50%;
-  border: var(--border-thickness) solid var(--color40);
 }
 
 .token-icon-image {

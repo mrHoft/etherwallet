@@ -2,7 +2,7 @@
 
 ## Commands
 
-- `npm run dev` — Vite dev server on port **3000**. The app is served under `/etherwallet/` (`base` in `vite.config.ts`, `<base>` in `index.html`); keep that base intact.
+- `npm run dev` — Vite dev server on port **3000**. The app is served under `/funds/` (`base` in `vite.config.ts`, `<base>` in `index.html`); keep that base intact.
 - `npm run build` — the only typecheck and full verification: `vue-tsc -b && vite build`.
 - `npx jest <path>` — run one suite; `npx jest -t '<name>'` — run one test.
 - There is no `npm test`, `lint`, or `format` script. Don't invent one.
@@ -36,5 +36,5 @@
 - do not use backward imports (`../*`), use direct imports instead (`~/*`).
 - `tsconfig.app.json` enables `noUnusedLocals`, `noUnusedParameters`, and `erasableSyntaxOnly`: unused imports/vars fail the build, and `enum`, `namespace`, and constructor parameter properties are not allowed.
 - Styling uses the CSS variables in `src/style.css` (`--color00`…`--color90`, `--color-accent*`, `--border-thickness`, font vars). Light/dark is handled by the `data-theme` attribute on `<html>` (`src/utils/theme.ts`, preferences `light`/`dark`/`system`); prefer variables over hardcoded colors.
-- Wallet secrets are stored only as ethers-encrypted JSON in `localStorage` under the `EtherWallet` key via `src/utils/storage.ts`. Entries live under `wallet.<name>`, and names are normalized by replacing spaces with `_`. Never add plaintext private keys or mnemonics to storage or logs.
+- Wallet secrets are stored only as ethers-encrypted JSON in `localStorage` under the `Funds` key via `src/utils/storage.ts`. Entries live under `wallet.<name>`, and names are normalized by replacing spaces with `_`. Never add plaintext private keys or mnemonics to storage or logs.
 - `docs/prompt.md` is the original frontend style prompt (Composition API, typed props/emits, relative units, CSS variables). Follow its UI guidance, but ignore its Pinia/vue-router advice.

@@ -1,5 +1,5 @@
 <template>
-  <SettingsSection title="Theme" description="Choose how EtherWallet looks. System follows your device appearance.">
+  <SettingsSection title="Theme" description="Choose how app looks. System follows your device appearance.">
     <div class="theme-options" role="group" aria-label="Theme">
       <button type="button" :class="['theme-option', { 'theme-option--active': themePreference === 'light' }]"
         :aria-pressed="themePreference === 'light'" @click="setThemePreference('light')">

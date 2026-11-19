@@ -1,13 +1,6 @@
-import type { Component } from 'vue'
-import PageHome from './pages/PageHome.vue'
-import PageTipCalculator from './pages/PageTipCalculator.vue'
-import PageWalletCreate from './pages/PageCreate.vue'
-import PageWallet from './pages/PageWallet.vue'
-import PageTransfer from './pages/PageTransfer.vue'
-import PageExchange from './pages/PageExchange.vue'
-import PageInterest from './pages/PageInterest.vue'
-import PageSettings from './pages/PageSettings.vue'
-import PageNotFound from './pages/PageNotFound.vue'
+import { defineAsyncComponent, type Component } from 'vue'
+import PageTipCalculator from '~/pages/PageTipCalculator.vue'
+import PageLoading from '~/components/ui/PageLoading.vue'
 import { isDecoyEnabled } from '~/utils/decoy'
 import { normalizePath, withBase } from '~/utils/path'
 
@@ -17,15 +10,29 @@ export interface Route {
   showNavigation?: boolean
 }
 
-export const routes: Route[] = [
-  { path: withBase('/'), component: PageTipCalculator, showNavigation: false },
-  { path: withBase('/home'), component: PageHome },
-  { path: withBase('/wallet'), component: PageWallet },
-  { path: withBase('/create'), component: PageWalletCreate },
-  { path: withBase('/transfer'), component: PageTransfer },
-  { path: withBase('/exchange'), component: PageExchange },
-  { path: withBase('/interest'), component: PageInterest },
-  { path: withBase('/settings'), component: PageSettings },
+const lazyPage = (loader: () => Promise<{ default: Component }>): Component => {
+  return defineAsyncComponent<Component>({
+    loader,
+    delay: 150,
+    loadingComponent: PageLoading,
+    onError: (_error, retry, fail, attempts) => {
+      if (attempts < 3) retry()
+      else fail()
+    }
+  })
+}
+
+// The tip calculator is the landing page in decoy mode, so it stays eager.
+const PageHome = lazyPage(() => import('~/pages/PageHome.vue'))
+const PageWallet = lazyPage(() => import('~/pages/PageWallet.vue'))
+const PageWalletCreate = lazyPage(() => import('~/pages/PageCreate.vue'))
+const PageTransfer = lazyPage(() => import('~/pages/PageTransfer.vue'))
+const PageExchange = lazyPage(() => import('~/pages/PageExchange.vue'))
+const PageInterest = lazyPage(() => import('~/pages/PageInterest.vue'))
+const PageSettings = lazyPage(() => import('~/pages/PageSettings.vue'))
+const PageNotFound = lazyPage(() => import('~/pages/PageNotFound.vue'))
+
+const baseRoutes: Route[] = [
   { path: '/', component: PageTipCalculator, showNavigation: false },
   { path: '/home', component: PageHome },
   { path: '/wallet', component: PageWallet },
@@ -33,7 +40,12 @@ export const routes: Route[] = [
   { path: '/transfer', component: PageTransfer },
   { path: '/exchange', component: PageExchange },
   { path: '/interest', component: PageInterest },
-  { path: '/settings', component: PageSettings },
+  { path: '/settings', component: PageSettings }
+]
+
+export const routes: Route[] = [
+  ...baseRoutes.map(route => ({ ...route, path: withBase(route.path) })),
+  ...baseRoutes,
   { path: '**', component: PageNotFound }
 ]
 

@@ -1,4 +1,4 @@
-# 💳 EtherWallet
+# 💳 Funds
 
 A Vue 3-based Ethereum wallet application with comprehensive functionality for managing wallets, transferring tokens, and interacting with the Ethereum blockchain.
 

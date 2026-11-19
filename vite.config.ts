@@ -5,9 +5,9 @@ const cwd = process.cwd();
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
-  // Dev keeps the /etherwallet/ base so routes and refreshes resolve there.
+  // Dev keeps the /funds/ base so routes and refreshes resolve there.
   // Production uses a relative base so the built assets work from any gh-pages path.
-  base: command === 'build' ? './' : '/etherwallet/',
+  base: command === 'build' ? './' : '/funds/',
   build: {
     assetsDir: './',
     rollupOptions: {

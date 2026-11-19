@@ -66,4 +66,4 @@ class Storage {
   };
 }
 
-export const storage = new Storage('EtherWallet')
+export const storage = new Storage('Funds')

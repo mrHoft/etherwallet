@@ -1,4 +1,4 @@
-export const BASE_PATH = '/etherwallet/'
+export const BASE_PATH = '/funds/'
 
 export const withBase = (path: string): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
