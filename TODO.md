@@ -11,8 +11,11 @@ WalletBalance.vue:212 and CardBalance.vue:79 always fetch every symbol in TOKEN_
 
 # Interest-bearing TRC-20
 Add gas-reserve correction for deposit operations in:
-src/components/interest/sTRX.vue, stUSDT.vue
-Use getGasPrice from src/api/tron/tronState.ts (if applicable)
+src/components/interest/sTRX.vue
+Use getGasPrice()*1.2 from src/api/tron/tronState.ts
+
+src/components/interest/stUSDT.vue
+Add insufficientGas for the deposit tab, an inline error (e.g. "Insufficient TRX balance for network fees (~X TRX)."), and include it in isFormValid.
 
 # Transfer
 - Move form and its logic from src/pages/PageTransfer.vue to src/components/ethereum/Transfer.vue
@@ -25,6 +28,3 @@ Use getGasPrice from src/api/tron/tronState.ts (if applicable)
 - Create src/components/tron/Exchange.vue component and corresponding logic in src/api/tron/exchange.ts
 - Use getGasPrice from src/api/tron/tronState.ts
 - Use src/components/ui/Tabs.vue component with 'Ethereum', 'Tron' tabs to make possible to switch between exchange components
-
-# deploy:pages
-Fix deploy:pages npm command to remove old files from repository.
